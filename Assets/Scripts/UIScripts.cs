@@ -212,7 +212,7 @@ public class UIScripts : MonoBehaviour {
 	
 	public void AttackClick(string param2)
 	{
-		Debug.Log("poop");
+		Debug.Log("Attack Click");
 		switch(WorldConnection2.isAttacking)
 		{
 			case 0:

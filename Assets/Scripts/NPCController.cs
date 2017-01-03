@@ -70,6 +70,7 @@ public class NPCController : MonoBehaviour
 	public byte gender = 0;// Gender (0=male, 1=female)
 	public int animationState;//animation
 	public CharacterController controller;
+    public Transform _transform;
 
 	public float fixnum;
 	public float ycalc;
@@ -81,6 +82,17 @@ public class NPCController : MonoBehaviour
 	public bool updateDeltas;
 	public bool playerRespawn = false;
 	public string targetName = "";
+
+#if UNITY_EDITOR
+    protected float _lastUpdateTime;
+#endif
+    protected Vector3 _velocity = new Vector3(0,0,0);
+    protected float _dampSpeed = 2.5f;
+
+    void Awake()
+    {
+        _transform = this.transform;
+    }
 	
 	void Start()
 	{
@@ -89,7 +101,7 @@ public class NPCController : MonoBehaviour
 		//define character controller
 		controller = this.GetComponent<CharacterController>();
 		//place NPCs via ZoneSpawns packet var
-//		this.transform.position = new Vector3(x, y + 5f, z);
+//		_transform.position = new Vector3(x, y + 5f, z);
 		//define overhead name object
 		rend = this.NameObject.GetComponent<Renderer>();
 		rend.material.color = Color.red;
@@ -158,20 +170,20 @@ public class NPCController : MonoBehaviour
 		{
 			//wandering
 			// TODO-performance: When a update arrives store whether or not the NPC is moving. Calculating magnitude involves sqrt 
-			if (deltaF.magnitude != 0)
+			//if (deltaF.magnitude != 0)
 			{
-				if(isWalk == 0){walkNow();}
+				
 				//step = delta time x speed. The server is calculating the speed which is represented as the magnitude of vector x y z. Translate the game object by those deltas multiplied by delta time
 				if(NPC == NPCType.NPC)
 				{
 					step = deltaF.magnitude * 10f;
 					//sets clientupdate flag to false when an npc is autorunning, waiting for another clientupdate packet
-					if(this.transform.position.x == movetoX && this.transform.position.z == movetoZ){clientUpdate = false;}
+                    if (_transform.position.x == movetoX && _transform.position.z == movetoZ) { clientUpdate = false; }
 					//if new update from server, move there
 					if(clientUpdate == true)
 					{
 						//initial movement
-						ycalc = this.gameObject.transform.position.y;
+						ycalc = _transform.position.y;
 						targetPosition.x = movetoX;
 						targetPosition.z = movetoZ;
 					}
@@ -186,17 +198,54 @@ public class NPCController : MonoBehaviour
 
 					//move now
 					raycastY();
-					targetPosition.y = this.gameObject.transform.position.y;
+					targetPosition.y = _transform.position.y;
 
 //#if UNITY_EDITOR
 //                    if (Selection.activeGameObject == this.gameObject)
 //                    {
 //                        Debug.Log(string.Format("Moving NPC ID: {0} Time: {1} CurPos: {2} TarPos: {3} Step: {4} dT: {5}",
-//                            spawnId, Time.time, this.gameObject.transform.position, targetPosition, step, Time.deltaTime));
+//                            spawnId, Time.time, _transform.position, targetPosition, step, Time.deltaTime));
 //                    }
 //#endif
 
-					this.gameObject.transform.position = Vector3.MoveTowards(this.gameObject.transform.position, targetPosition, step * Time.deltaTime);
+                    //if (distFromTargetSqr > 0.05f)
+                    {
+                        //_transform.position = Vector3.MoveTowards(_transform.position, targetPosition, step * Time.deltaTime);
+                        _transform.position = Vector3.SmoothDamp(_transform.position, targetPosition, ref _velocity, _dampSpeed);
+                    }
+
+                    if (deltaX == 0 && deltaY == 0 && deltaZ == 0 && movetoX != 0 && movetoY != 0 && movetoZ != 0)
+                    {
+                        float distFromTargetSqr = Vector2.SqrMagnitude(new Vector2(_transform.position.x, _transform.position.z) - new Vector2(targetPosition.x, targetPosition.z));
+                        if (isIdle == 0 && distFromTargetSqr < 0.5f)
+                        {
+                            _transform.position = new Vector3(movetoX, _transform.position.y, movetoZ);
+                            idleNow();
+                        }
+                    }
+                    else
+                    {
+                        if (isWalk == 0) 
+                        { 
+                            walkNow(); 
+                        }
+                    }
+//#if UNITY_EDITOR
+//                    else
+//                    {
+//                        if (Selection.activeGameObject == this.gameObject)
+//                        {
+//                            Debug.Log(string.Format("Inside epsilon step: {0} deltaF: {1:0.000}", step, deltaF));
+//                        }
+//                    }
+//#endif
+
+#if UNITY_EDITOR
+                    if (Selection.activeGameObject == this.gameObject)
+                    {
+                        DebugMovementHelper();
+                    }
+#endif
 				}
 				//if this a player not an npc
 				else
@@ -205,40 +254,46 @@ public class NPCController : MonoBehaviour
                     if (Selection.activeGameObject == this.gameObject)
                     {
                         Debug.Log(string.Format("Moving PC ID: {0} Time: {1} CurPos: {2} TarPos: {3} Step: {4} dT: {5}",
-                            spawnId, Time.time, this.gameObject.transform.position, targetPosition, step, Time.deltaTime));
+                            spawnId, Time.time, _transform.position, targetPosition, step, Time.deltaTime));
                     }
 #endif
 					targetPosition = new Vector3 (movetoX,movetoY,movetoZ);
-					this.transform.position = Vector3.MoveTowards(this.gameObject.transform.position, targetPosition, 1);
+					_transform.position = Vector3.MoveTowards(_transform.position, targetPosition, 1);
 				}
 			
 			//draw pretty lines of pathing for scene editor
-			//Debug.DrawRay (this.gameObject.transform.position, (this.gameObject.transform.position - targetPosition), Color.green);
-			//Debug.DrawRay (this.gameObject.transform.position, (targetPosition - this.gameObject.transform.position), Color.green);
-            Debug.DrawLine(this.gameObject.transform.position, targetPosition, Color.green);
+			//Debug.DrawRay (_transform.position, (_transform.position - targetPosition), Color.green);
+			//Debug.DrawRay (_transform.position, (targetPosition - _transform.position), Color.green);
+                Debug.DrawLine(_transform.position, targetPosition, Color.green);
+                Debug.DrawLine(_transform.position, new Vector3(movetoX, movetoY, movetoZ), Color.blue);
+
 			}
 			//idle npc after reaching a target destination.
-			else
-			{
-				if (deltaX == 0 && deltaY == 0 && deltaZ == 0 && movetoX != 0 && movetoY != 0 && movetoZ != 0)
-				{
-					if(isIdle == 0){idleNow();}
-					this.transform.position = new Vector3(movetoX, this.gameObject.transform.position.y, movetoZ);
-					raycastY();
-				}
-				else
-				{
-					raycastY();
-					//FOR  Y ADJUSTMENTS IF UNDER OR BENEATH WORLD WHEN NOT MOVING AND NO POSITION UPDATES FROM SERVER
-				}
-			}
+            //else
+            //{
+            //    if (deltaX == 0 && deltaY == 0 && deltaZ == 0 && movetoX != 0 && movetoY != 0 && movetoZ != 0)
+            //    {
+            //        if(isIdle == 0)
+            //        {
+            //            idleNow();
+            //        }
+
+            //        _transform.position = new Vector3(movetoX, _transform.position.y, movetoZ);
+            //        raycastY();
+            //    }
+            //    else
+            //    {
+            //        raycastY();
+            //        //FOR  Y ADJUSTMENTS IF UNDER OR BENEATH WORLD WHEN NOT MOVING AND NO POSITION UPDATES FROM SERVER
+            //    }
+            //}
 		}
 	}
 	
 	public void raycastY()
 	{
 		RaycastHit[] hitsDown;
-		hitsDown = Physics.RaycastAll(this.gameObject.transform.position, Vector3.down, 200.0F);
+		hitsDown = Physics.RaycastAll(_transform.position, Vector3.down, 200.0F);
 		for (int i = 0; i < hitsDown.Length; i++) 
 		{
 			RaycastHit hitDown = hitsDown[i];
@@ -247,22 +302,22 @@ public class NPCController : MonoBehaviour
 			{
 				if(hitDown.distance > 3.1f && hitDown.collider.tag == "Terrain")
                 {
-                    this.gameObject.transform.position -= new Vector3(0f,20f * Time.deltaTime,0f);
+                    _transform.position -= new Vector3(0f,20f * Time.deltaTime,0f);
                 }
 				
                 if(hitDown.distance < 3f && hitDown.collider.tag == "Terrain")
                 {
-                    this.gameObject.transform.position += new Vector3(0f,20f * Time.deltaTime,0f);
+                    _transform.position += new Vector3(0f,20f * Time.deltaTime,0f);
                 }
 			}
 			else
 			{
-				this.gameObject.transform.position += new Vector3(0f,20f * Time.deltaTime,0f);
+				_transform.position += new Vector3(0f,20f * Time.deltaTime,0f);
 			}
 		}
 		if(hitsDown.Length == 0)
         {
-            this.gameObject.transform.position += new Vector3(0f,20f * Time.deltaTime,0f);
+            _transform.position += new Vector3(0f,20f * Time.deltaTime,0f);
         }
 	}
 	
@@ -348,26 +403,54 @@ public class NPCController : MonoBehaviour
         deltaH = dH;
     }
 
-    public void SetXYZRotDeltaXYZR(float X, float Y, float Z, float H, int animSpeed, float dX, float dY, float dZ, float dH)
+#if UNITY_EDITOR
+    private Vector3 _curPos = new Vector3(0,0,0);
+    private Vector3 _prevMovePos = new Vector3(0, 0, 0);
+    private Vector3 _newMovePos = new Vector3(0, 0, 0);
+
+    float _prevMoveX;
+    float _prevMoveY;
+    float _prevMoveZ;
+    float _prevMoveH;
+#endif
+
+    public void SetXYZRotDeltaXYZR(float newX, float newY, float newZ, float newH, int animSpeed, float dX, float dY, float dZ, float dH)
     {
+        _dampSpeed = (Time.time - _lastUpdateTime ) * 0.5f;
+
 #if UNITY_EDITOR
         //If we've got the entity selected in the scene, we'll print detailed shit here to log for easier tracking via console - Casual
         //Printing name last, since for some reason it truncates the rest of the message, too lazy to figure out why
         if (Selection.activeGameObject == this.gameObject)
         {
-            Debug.Log(string.Format("ID: {0} Time: {1} tX: {2} tY: {3} tZ: {4} tH: {5} animSpeed: {6} dX: {7} dY: {8} dZ: {9} dH: {10}\n In X: {11} Y: {12} Z: {13} H: {14} animSpeed: {15} DX: {16} DY: {17} DZ: {18} DH: {19}\nName: {20}",
+            Debug.Log(string.Format("ID: {0} Time: {1} dT: {24} curX: {21} curY: {22} curZ: {23} mtX: {2} mtY: {3} mtZ: {4} mtH: {5} animSpeed: {6} dX: {7} dY: {8} dZ: {9} dH: {10}\n In X: {11} Y: {12} Z: {13} H: {14} animSpeed: {15} DX: {16} DY: {17} DZ: {18} DH: {19}\nName: {20}",
                 spawnId, Time.time, movetoX, movetoY, movetoZ, movetoH, animationspeed, deltaX, deltaY, deltaZ, deltaH,
-                X, Y, Z, H, animSpeed, dX, dY, dZ, dH, name));
+                newX, newY, newZ, newH, animSpeed, dX, dY, dZ, dH, name, transform.position.x, transform.position.y, transform.position.z, _dampSpeed));
+
+            DebugMovementHelper();
         }
+
+        _prevMoveX = movetoX;
+        _prevMoveY = movetoY;
+        _prevMoveZ = movetoZ;
+        _prevMoveH = movetoH;
 #endif
 
-        movetoX = X;
-        movetoY = Y;
-        movetoZ = Z;
+        //_transform.position = new Vector3(movetoX, movetoY, movetoZ);
+        _velocity.x = 0;
+        _velocity.y = 0;
+        _velocity.z = 0;
 
-        if (movetoH != H)
+
+        movetoX = newX;
+        movetoY = newY;
+        movetoZ = newZ;
+
+        _lastUpdateTime = Time.time;
+        
+        if (movetoH != newH)
         {
-            movetoH = H;
+            movetoH = newH;
             updateHeading = true;
         }
 
@@ -384,4 +467,24 @@ public class NPCController : MonoBehaviour
         deltaH = dH;
         clientUpdate = true;
     }
+
+#if UNITY_EDITOR
+    void DebugMovementHelper()
+    {
+        _curPos = new Vector3(transform.position.x, transform.position.y, transform.position.z);
+        _prevMovePos = new Vector3(_prevMoveX, _prevMoveY, _prevMoveZ);
+        _newMovePos = new Vector3(movetoX, movetoY, movetoZ);
+        
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.black;
+        Gizmos.DrawSphere(_curPos, 1f);
+        Gizmos.color = Color.white;
+        Gizmos.DrawSphere(_prevMovePos, 0.5f);
+        Gizmos.color = Color.green;
+        Gizmos.DrawSphere(_newMovePos, 1f);
+    }
+#endif
 }

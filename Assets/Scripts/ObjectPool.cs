@@ -130,21 +130,24 @@ public class ObjectPool : MonoBehaviour
                 if (NPC == 0) { size = 1.4f; pooledObject.transform.localScale = new Vector3(size, size, size); }
                 if (NPC == 1) { pooledObject.transform.localScale = new Vector3((size / 4f), (size / 4f), (size / 4f)); }
                 pooledObject.name = spawnId.ToString();
-                pooledObject.GetComponent<NPCController>().RaceID = race;
-                pooledObject.GetComponent<NPCController>().spawnId = spawnId;
-                pooledObject.GetComponent<NPCController>().name = name;// Player's Name
-                pooledObject.GetComponent<NPCController>().prefabName = prefab.name;
-                pooledObject.GetComponent<NPCController>().x = x;// x coord
-                pooledObject.GetComponent<NPCController>().y = y;// y coord
-                pooledObject.GetComponent<NPCController>().z = z;// z coord
-                pooledObject.GetComponent<NPCController>().heading = heading;// heading
-                pooledObject.GetComponent<NPCController>().deity = deity;// Player's Deity
-                pooledObject.GetComponent<NPCController>().size = size;// Model size
-                pooledObject.GetComponent<NPCController>().NPC = NPC;// 0=player,1=npc,2=pc corpse,3=npc corpse,a
-                pooledObject.GetComponent<NPCController>().curHp = curHp;// Current hp %%% wrong
-                pooledObject.GetComponent<NPCController>().maxHp = maxHp;// Current hp %%% wrong
-                pooledObject.GetComponent<NPCController>().level = level;// Spawn Level
-                pooledObject.GetComponent<NPCController>().gender = gender;// Gender (0=male, 1=female)
+
+                NPCController controller = pooledObject.GetComponent<NPCController>();
+
+                controller.RaceID = race;
+                controller.spawnId = spawnId;
+                controller.name = name;// Player's Name
+                controller.prefabName = prefab.name;
+                controller.x = x;// x coord
+                controller.y = y;// y coord
+                controller.z = z;// z coord
+                controller.heading = heading;// heading
+                controller.deity = deity;// Player's Deity
+                controller.size = size;// Model size
+                controller.NPC = (NPCController.NPCType)NPC;// 0=player,1=npc,2=pc corpse,3=npc corpse,a
+                controller.curHp = curHp;// Current hp %%% wrong
+                controller.maxHp = maxHp;// Current hp %%% wrong
+                controller.level = level;// Spawn Level
+                controller.gender = gender;// Gender (0=male, 1=female)
                 spawnlist.Add(pooledObject);
 
                 return pooledObject;

@@ -760,7 +760,7 @@ namespace EQBrowser
 					string targetName3 = Regex.Replace(targetName2, "[\0]", "");
 					ChatText2.text += (Environment.NewLine + "You hit " + targetName3 + " for " + damage + " points of damage.");
 	
-					int pv = temp.GetComponent<NPCController>().NPC;
+					int pv = (int)temp.GetComponent<NPCController>().NPC;
 					
 //					if(pv == 0){googleAnalytics.LogEvent("PvP-Death", ourPlayerName, "Killer", 1);googleAnalytics.LogEvent("PvP-Death", targetName3, "Victim", 1);}
 //					if(pv == 1){googleAnalytics.LogEvent("PvE-Death", ourPlayerName, "Killer", 1);googleAnalytics.LogEvent("PvE-Death", targetName3, "Victim", 1);}
@@ -776,7 +776,7 @@ namespace EQBrowser
 					string targetName2 = Regex.Replace(targetClean, "[_]", " ");
 					string targetName3 = Regex.Replace(targetName2, "[\0]", "");
 					ChatText2.text += (Environment.NewLine + "<color=#ff0000ff><b>" + targetName3 + " hits" + " YOU for " + damage + " points of damage.</b></color>");
-					int pv = temp2.GetComponent<NPCController>().NPC;
+					int pv = (int)temp2.GetComponent<NPCController>().NPC;
 //					if(pv == 0){googleAnalytics.LogEvent("PvP-Death", ourPlayerName, "Victim", 1);googleAnalytics.LogEvent("PvP-Death", targetName3, "Killer", 1);}
 //					if(pv == 1){googleAnalytics.LogEvent("PvE-Death", ourPlayerName, "Victim", 1);googleAnalytics.LogEvent("PvE-Death", targetName3, "Killer", 1);}
 				}
@@ -989,28 +989,31 @@ namespace EQBrowser
 					    temp = ObjectPool.instance.spawnlist.First();
 					    string PrefabName = temp.GetComponent<NPCController>().prefabName;
 					    temp.name = PrefabName;
-						temp.GetComponent<NPCController>().updateHeading = false;
-						temp.GetComponent<NPCController>().name = "";
-						temp.GetComponent<NPCController>().targetName = "";
-						temp.GetComponent<NPCController>().updateDeltas = false;
-						temp.GetComponent<NPCController>().clientUpdate = false;
-						temp.GetComponent<NPCController>().isTarget = false;
-						temp.GetComponent<NPCController>().isDead = 0;
-						temp.GetComponent<NPCController>().playerRespawn = false;
-						temp.GetComponent<NPCController>().movetoX = 0;
-						temp.GetComponent<NPCController>().movetoY = 0;
-						temp.GetComponent<NPCController>().movetoZ = 0;
-						temp.GetComponent<NPCController>().movetoH = 0;
-						temp.GetComponent<NPCController>().deltaX = 0;
-						temp.GetComponent<NPCController>().deltaY = 0;
-						temp.GetComponent<NPCController>().deltaZ = 0;
-						temp.GetComponent<NPCController>().curHp = 0;
-						temp.GetComponent<NPCController>().maxHp = 0;
-						temp.GetComponent<NPCController>().NPC = 0;
-						temp.GetComponent<NPCController>().animationspeed = 0;
-						temp.GetComponent<NPCController>().animationState = 0;
-						temp.GetComponent<NPCController>().deltaF = new Vector3(0,0,0);
-						temp.GetComponent<NPCController>().targetPosition = new Vector3(0,0,0);
+
+                        NPCController controller = temp.GetComponent<NPCController>();
+
+						controller.updateHeading = false;
+						controller.name = "";
+						controller.targetName = "";
+						controller.updateDeltas = false;
+						controller.clientUpdate = false;
+						controller.isTarget = false;
+						controller.isDead = 0;
+						controller.playerRespawn = false;
+						controller.movetoX = 0;
+						controller.movetoY = 0;
+						controller.movetoZ = 0;
+						controller.movetoH = 0;
+						controller.deltaX = 0;
+						controller.deltaY = 0;
+						controller.deltaZ = 0;
+						controller.curHp = 0;
+						controller.maxHp = 0;
+                        controller.NPC = NPCController.NPCType.Player;
+						controller.animationspeed = 0;
+						controller.animationState = 0;
+						controller.deltaF = new Vector3(0,0,0);
+						controller.targetPosition = new Vector3(0,0,0);
 					    ObjectPool.instance.PoolObject(temp);
 					    ObjectPool.instance.spawnlist.Remove(temp);
 					}
@@ -1101,30 +1104,46 @@ namespace EQBrowser
 			
 			
 			GameObject temp = null;
-			if(isDead == false){temp = ObjectPool.instance.spawnlist.FirstOrDefault(obj => obj.name == spawn_id.ToString());}
+			if(isDead == false)
+            {
+                temp = ObjectPool.instance.spawnlist.FirstOrDefault(obj => obj.name == spawn_id.ToString());
+            }
+
 //			GameObject temp = ObjectPool.instance.spawndict[spawn_id];
 			if(temp != null)
 			{
-				temp.GetComponent<NPCController>().movetoX = -x;// Player's Name
-				temp.GetComponent<NPCController>().movetoY = z;// Player's Name
-				temp.GetComponent<NPCController>().movetoZ = y;// Player's Name
-				if(temp.GetComponent<NPCController>().movetoH != rotation)
-				{
-					temp.GetComponent<NPCController>().movetoH = rotation;// Player's Name
-					temp.GetComponent<NPCController>().updateHeading = true;
-				}
-				temp.GetComponent<NPCController>().animationspeed = animationspeed;// animationspeed
+                NPCController controller = temp.GetComponent<NPCController>();
+                controller.SetXYZRotDeltaXYZR(-x, z, y, rotation, animationspeed, -deltaX, deltaZ, deltaY, deltaH);
+
+                ////controller.movetoX = -x;// Player's Name
+                ////controller.movetoY = z;// Player's Name
+                ////controller.movetoZ = y;// Player's Name
+                //controller.SetMoveXYZ(-x, z, y);
+
+                //if(controller.movetoH != rotation)
+                //{
+                //    //controller.movetoH = rotation;// Player's Name
+                //    //controller.updateHeading = true;
+                //    controller.SetHeading(rotation);
+                //}
 				
-				if(temp.GetComponent<NPCController>().deltaX != -deltaX || temp.GetComponent<NPCController>().deltaY != deltaZ || temp.GetComponent<NPCController>().deltaZ != deltaY)
-				{
-					temp.GetComponent<NPCController>().deltaX = -deltaX;
-					temp.GetComponent<NPCController>().deltaY = deltaZ;
-					temp.GetComponent<NPCController>().deltaZ = deltaY;
-					temp.GetComponent<NPCController>().updateDeltas = true;
-				}
+                ////controller.animationspeed = animationspeed;// animationspeed
+                //controller.SetAnimSpeed(animationspeed);
 				
-				temp.GetComponent<NPCController>().deltaH = deltaH;// Player's Name
-				temp.GetComponent<NPCController>().clientUpdate = true;
+                //if(controller.deltaX != -deltaX || controller.deltaY != deltaZ || controller.deltaZ != deltaY)
+                //{
+                //    //controller.deltaX = -deltaX;
+                //    //controller.deltaY = deltaZ;
+                //    //controller.deltaZ = deltaY;
+                //    //controller.updateDeltas = true;
+                //    controller.SetDeltaXYZ(-deltaX, deltaZ, deltaY);
+                //}
+				
+                ////controller.deltaH = deltaH;// Player's Name
+                //controller.SetDeltaHeading(deltaH);
+                //controller.clientUpdate = true;
+
+                
 			}
 			
 			

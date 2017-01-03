@@ -368,6 +368,18 @@ public class CharacterSelect : MonoBehaviour {
 
 	public void LoginButtonClicked(string param)
 	{
+#if UNITY_EDITOR
+        //Save last entered values into Unity's player prefs for local easy saving
+        PlayerPrefs.SetString("editorLastHostName", HostNameInput.text);
+        PlayerPrefs.SetString("editorLastUName", UserNameInput.text);
+        PlayerPrefs.SetString("editorLastPwd", PasswordInput.text);
+
+        //for dev quick login
+        //HostNameInput.text = "158.69.221.200:80";
+        //UserNameInput.text = "Lenny";
+        //PasswordInput.text = "Lenny";
+#endif
+
 		LoginStatus.text = "Connecting to " + HostNameInput.text + "...";
 		if (UserNameInput.text.Length > 0 && PasswordInput.text.Length > 0 && HostNameInput.text.Length > 0)
 		{
@@ -395,6 +407,16 @@ public class CharacterSelect : MonoBehaviour {
 			UserNameInput.text = "saltyx";
 			PasswordInput.text = "saltyx";
 		#endif
+
+#if UNITY_EDITOR
+            UserNameInput.text = PlayerPrefs.GetString("editorLastUName", "");
+            PasswordInput.text = PlayerPrefs.GetString("editorLastPwd", "");
+
+        //for dev quick login
+        //HostNameInput.text = "158.69.221.200:80";
+        //UserNameInput.text = "Lenny";
+        //PasswordInput.text = "Lenny";
+#endif
 	}
 	
 	public void Server2Clicked(string param)
@@ -1781,7 +1803,7 @@ public class CharacterSelect : MonoBehaviour {
 	{
 		CharLookAPI.ActiveHead = 0;
 		CharLookAPI.TextureSet = 3;
-		Debug.Log("hi");
+		Debug.Log("CharacterSelect Start()");
 		setupBtn ();
 		_DeitySelection = 396;
 		ZoneSelection = 2;
@@ -1797,7 +1819,6 @@ public class CharacterSelect : MonoBehaviour {
 		FemaleText.color = Color.green;
 		DruidText.color = Color.green;
 		WorldConnection.isTyping = true;
-
 	}	
 
 	// Update is called once per frame

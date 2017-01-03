@@ -30,7 +30,12 @@ namespace EQBrowser {
 		public Text ChatText2;
 		public GameObject NullGameObject;
 		public int isAttacking;
-		
+
+        //No ping yet, but we can keep track of packets per second to see if connection is moving.
+        public static int packetsLatestSecond;
+        public static long packetsUnhandledType;
+        public static long packetsTotal;
+
 		public void Awake() 
 		{
 			if(instance)
@@ -338,14 +343,25 @@ namespace EQBrowser {
 							RawData = System.Convert.FromBase64CharArray (IdChecker1.data.ToCharArray(), 0, IdChecker1.data.Length);
 						}
 
-						if(opcodeDict.ContainsKey(IdChecker1.opcode)){
-							string RawOp = IdChecker1.opcode;
+                        if (opcodeDict.ContainsKey(IdChecker1.opcode))
+                        {
+                            string RawOp = IdChecker1.opcode;
 
-							int length = 0;
-							if(RawData != null)
-								length = RawData.Length;
-							opcodeDict[RawOp](RawData, length, IdChecker1.zoneid == "-1" ? true : false);
-						}
+                            int length = 0;
+                            if (RawData != null)
+                            {
+                                length = RawData.Length;
+                            }
+
+                            opcodeDict[RawOp](RawData, length, IdChecker1.zoneid == "-1" ? true : false);
+                            packetsLatestSecond++;
+                            packetsTotal++;
+                        }
+                        else
+                        {
+                            packetsUnhandledType++;
+                            packetsTotal++;
+                        }
 					}
 				}
 				if (ws_.Error != null) {

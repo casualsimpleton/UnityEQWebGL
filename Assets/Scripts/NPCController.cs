@@ -208,16 +208,27 @@ public class NPCController : MonoBehaviour
 //                    }
 //#endif
 
-                    //if (distFromTargetSqr > 0.05f)
+                    //float distFromTargetSqr = Vector2.SqrMagnitude(new Vector2(_transform.position.x, _transform.position.z) - new Vector2(targetPosition.x, targetPosition.z));
+
+                    Vector3 newPos = _transform.position + (deltaF * step * Time.deltaTime);
+                    float dotProd = Vector3.Dot(targetPosition, newPos);
+
+                    if (dotProd > 0)
+                    {
+                        _transform.position = newPos;
+                    }
+
+                    //if (distFromTargetSqr > 0.1f)
                     {
                         //_transform.position = Vector3.MoveTowards(_transform.position, targetPosition, step * Time.deltaTime);
-                        _transform.position = Vector3.SmoothDamp(_transform.position, targetPosition, ref _velocity, _dampSpeed);
+                        //_transform.position = Vector3.SmoothDamp(_transform.position, targetPosition, ref _velocity, _dampSpeed);
+
+                        //_transform.position = _transform.position + (deltaF * step * Time.deltaTime);
                     }
 
                     if (deltaX == 0 && deltaY == 0 && deltaZ == 0 && movetoX != 0 && movetoY != 0 && movetoZ != 0)
                     {
-                        float distFromTargetSqr = Vector2.SqrMagnitude(new Vector2(_transform.position.x, _transform.position.z) - new Vector2(targetPosition.x, targetPosition.z));
-                        if (isIdle == 0 && distFromTargetSqr < 0.5f)
+                        if (isIdle == 0)// && distFromTargetSqr < 0.5f)
                         {
                             _transform.position = new Vector3(movetoX, _transform.position.y, movetoZ);
                             idleNow();
@@ -436,11 +447,10 @@ public class NPCController : MonoBehaviour
         _prevMoveH = movetoH;
 #endif
 
-        //_transform.position = new Vector3(movetoX, movetoY, movetoZ);
+        _transform.position = new Vector3(movetoX, movetoY, movetoZ);
         _velocity.x = 0;
         _velocity.y = 0;
         _velocity.z = 0;
-
 
         movetoX = newX;
         movetoY = newY;

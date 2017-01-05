@@ -161,6 +161,7 @@ namespace EQBrowser {
 		}
 
 		Dictionary<string, OpcodeFunc> opcodeDict;
+        Dictionary<OpCode, OpcodeFunc> opCodes;
 
 				
 		void Start()
@@ -205,6 +206,44 @@ namespace EQBrowser {
 			opcodeDict.Add ("329", HandleWorldMessage_WorldMOTD);
 			opcodeDict.Add ("72", HandleWorldMessage_ItemPacket);
             opcodeDict.Add("151", HandleWorldMessage_EnterWorld);
+
+            opCodes = new Dictionary<OpCode, OpcodeFunc>();
+            opCodes.Add(OpCode.OP_SendCharInfo, HandleWorldMessage_SendCharInfo);
+            opCodes.Add(OpCode.OP_ApproveName, HandleWorldMessage_ApproveName);
+            opCodes.Add(OpCode.OP_ZoneUnavail, HandleWorldMessage_ZoneUnavailable);
+            opCodes.Add(OpCode.OP_ZoneServerInfo, HandleWorldMessage_ZoneServerInfo);
+            opCodes.Add(OpCode.OP_PlayerProfile, HandleWorldMessage_PlayerProfile);
+            opCodes.Add(OpCode.OP_NewZone, HandleWorldMessage_NewZone);
+            opCodes.Add(OpCode.OP_ZoneServerReady, HandleWorldMessage_ZoneServerReady);
+            opCodes.Add(OpCode.OP_ResetAA, HandleWorldMessage_EmuKeepAlive);
+            opCodes.Add(OpCode.OP_EmuKeepAlive, HandleWorldMessage_EmuKeepAlive);
+            opCodes.Add(OpCode.OP_EmuRequestClose, HandleWorldMessage_EmuRequestClose);
+            opCodes.Add(OpCode.OP_LogoutReply, HandleWorldMessage_LogOutReply);
+            opCodes.Add(OpCode.OP_SendExpZonein, HandleWorldMessage_SendExpZonein);
+            opCodes.Add(OpCode.OP_ZoneSpawns, HandleWorldMessage_ZoneSpawns);
+            opCodes.Add(OpCode.OP_NewSpawn, HandleWorldMessage_ZoneSpawns);
+            opCodes.Add(OpCode.OP_ZoneChange, HandleWorldMessage_ZoneChange);
+            opCodes.Add(OpCode.OP_DeleteSpawn, HandleWorldMessage_DeleteSpawn);
+            opCodes.Add(OpCode.OP_ChannelMessage, HandleWorldMessage_ChannelMessage);
+            opCodes.Add(OpCode.OP_ClientUpdate, HandleWorldMessage_ClientUpdate);
+            opCodes.Add(OpCode.OP_SimpleMessage, HandleWorldMessage_SimpleMessage);
+            opCodes.Add(OpCode.OP_FormattedMessage, HandleWorldMessage_FormattedMessage);
+            opCodes.Add(OpCode.OP_Damage, HandleWorldMessage_Damage);
+            opCodes.Add(OpCode.OP_HPUpdate, HandleWorldMessage_HPUpdate);
+            opCodes.Add(OpCode.OP_ZoneEntry, HandleWorldMessage_ZoneEntryInfo);
+            opCodes.Add(OpCode.OP_PlayerStateAdd, HandleWorldMessage_PlayerStateAdd);
+            opCodes.Add(OpCode.OP_PlayerStateRemove, HandleWorldMessage_PlayerStateRemove);
+            opCodes.Add(OpCode.OP_MobHealth, HandleWorldMessage_MobHealth);
+            opCodes.Add(OpCode.OP_ExpUpdate, HandleWorldMessage_ExpUpdate);
+            opCodes.Add(OpCode.OP_Death, HandleWorldMessage_Death);
+            opCodes.Add(OpCode.OP_SpawnAppearance, HandleWorldMessage_SpawnAppearance);
+            opCodes.Add(OpCode.OP_BecomeCorpse, HandleWorldMessage_BecomeCorpse);
+            opCodes.Add(OpCode.OP_ZonePlayerToBind, HandleWorldMessage_ZonePlayerToBind);
+            opCodes.Add(OpCode.OP_ItemPacket, HandleWorldMessage_ItemPacket);
+            opCodes.Add(OpCode.OP_MoneyOnCorpse, HandleWorldMessage_MoneyOnCorpse);
+            opCodes.Add(OpCode.OP_MOTD, HandleWorldMessage_WorldMOTD);
+            opCodes.Add(OpCode.OP_CharInventory, HandleWorldMessage_ItemPacket);
+            opCodes.Add(OpCode.OP_EnterWorld, HandleWorldMessage_EnterWorld);
 
 
 
@@ -343,17 +382,17 @@ namespace EQBrowser {
 							RawData = System.Convert.FromBase64CharArray (IdChecker1.data.ToCharArray(), 0, IdChecker1.data.Length);
 						}
 
-                        if (opcodeDict.ContainsKey(IdChecker1.opcode))
-                        {
-                            string RawOp = IdChecker1.opcode;
+                        OpCode opcodeShort = (OpCode)short.Parse(IdChecker1.opcode);
 
-                            int length = 0;
+                        if (opCodes.ContainsKey(opcodeShort))
+                        {
+                            int len = 0;
                             if (RawData != null)
                             {
-                                length = RawData.Length;
+                                len = RawData.Length;
                             }
 
-                            opcodeDict[RawOp](RawData, length, IdChecker1.zoneid == "-1" ? true : false);
+                            opCodes[opcodeShort](RawData, len, IdChecker1.zoneid == "-1" ? true : false);
                             packetsLatestSecond++;
                             packetsTotal++;
                         }
@@ -362,6 +401,26 @@ namespace EQBrowser {
                             packetsUnhandledType++;
                             packetsTotal++;
                         }
+
+                        //if (opcodeDict.ContainsKey(IdChecker1.opcode))
+                        //{
+                        //    string RawOp = IdChecker1.opcode;
+
+                        //    int length = 0;
+                        //    if (RawData != null)
+                        //    {
+                        //        length = RawData.Length;
+                        //    }
+
+                        //    opcodeDict[RawOp](RawData, length, IdChecker1.zoneid == "-1" ? true : false);
+                        //    packetsLatestSecond++;
+                        //    packetsTotal++;
+                        //}
+                        //else
+                        //{
+                        //    packetsUnhandledType++;
+                        //    packetsTotal++;
+                        //}
 					}
 				}
 				if (ws_.Error != null) {

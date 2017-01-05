@@ -18,12 +18,12 @@ namespace EQBrowser
 		public void DoEmuKeepAlive()
 		{
 			byte[] KeepAlive = null;
-			GenerateAndSendWorldPacket (0, 550 /* OP_EmuKeepAlive */, curZoneId, curInstanceId, KeepAlive);
+			GenerateAndSendWorldPacket (0, OpCode.OP_EmuKeepAlive, curZoneId, curInstanceId, KeepAlive);
 		}
 		public void DoEmuRequestClose()
 		{
 			byte[] EmuRequestClose = null;
-			GenerateAndSendWorldPacket (0, 551 /* OP_EmuRequestClose */, curZoneId, curInstanceId, EmuRequestClose);
+			GenerateAndSendWorldPacket (0, OpCode.OP_EmuRequestClose, curZoneId, curInstanceId, EmuRequestClose);
 		}
 		
 		public void DoMoveItem(int slotId)
@@ -44,7 +44,7 @@ namespace EQBrowser
 				Debug.Log("MoveItem: 30" + "to: " + slotId);
 			}
 			WriteInt32(0, ref MoveItemRequest, ref position);//number_in_stack
-			GenerateAndSendWorldPacket (MoveItemRequest.Length, 332 /* OP_Moveitem */, curZoneId, curInstanceId, MoveItemRequest);
+			GenerateAndSendWorldPacket (MoveItemRequest.Length, OpCode.OP_MoveItem, curZoneId, curInstanceId, MoveItemRequest);
 		}
 	
 		public void DoLootItem(int slotId)
@@ -62,7 +62,7 @@ namespace EQBrowser
 			WriteInt8(121, ref LootRequest, ref position);
 			WriteInt32(0, ref LootRequest, ref position); //autoloot
 			
-			GenerateAndSendWorldPacket (LootRequest.Length, 299 /* OP_LootItem */, curZoneId, curInstanceId, LootRequest);
+			GenerateAndSendWorldPacket (LootRequest.Length, OpCode.OP_LootItem, curZoneId, curInstanceId, LootRequest);
 		
 		}
 		
@@ -80,7 +80,7 @@ namespace EQBrowser
 			WriteInt32(channel, ref ChannelMessageRequest, ref position);
 			WriteInt32(0, ref ChannelMessageRequest, ref position);
 			WriteFixedLengthString(message, ref ChannelMessageRequest, ref position, messageLength);
-			GenerateAndSendWorldPacket (ChannelMessageRequest.Length, 69 /* OP_ChannelMessage */, curZoneId, curInstanceId, ChannelMessageRequest);				
+			GenerateAndSendWorldPacket (ChannelMessageRequest.Length, OpCode.OP_ChannelMessage, curZoneId, curInstanceId, ChannelMessageRequest);				
 		}
 		
 	    IEnumerator Wait(float duration)
@@ -97,7 +97,7 @@ namespace EQBrowser
             byte[] Zoning = new byte[1];
             Zoning[0] = zoning;
 
-			GenerateAndSendWorldPacket(65, 427, -1, -1, userNamePass, Zoning);
+            GenerateAndSendWorldPacket(65, OpCode.OP_SendLoginInfo, -1, -1, userNamePass, Zoning);
         }
 
         public void DoZoneChange(string name, short zoneId, int zoneReason)
@@ -113,7 +113,7 @@ namespace EQBrowser
 		    WriteInt32(0, ref ZoneChangeRequest, ref position); //z
 		    WriteInt32(zoneReason, ref ZoneChangeRequest, ref position); //zone reason
 		    WriteInt32(1, ref ZoneChangeRequest, ref position); //success
-			GenerateAndSendWorldPacket (ZoneChangeRequest.Length, 539 /* OP_ZoneChange */, curZoneId, curInstanceId, ZoneChangeRequest);
+			GenerateAndSendWorldPacket (ZoneChangeRequest.Length, OpCode.OP_ZoneChange, curZoneId, curInstanceId, ZoneChangeRequest);
 			curZoneId = zoneId;
         }
 		
@@ -166,7 +166,7 @@ namespace EQBrowser
 			byte[] TargetMouseRequest = new byte[4];
 			Int32 position = 0;
 			WriteInt32 (targetInt, ref TargetMouseRequest, ref position);
-			GenerateAndSendWorldPacket (TargetMouseRequest.Length, 478 /* OP_TargetMouse */, curZoneId, curInstanceId, TargetMouseRequest);
+			GenerateAndSendWorldPacket (TargetMouseRequest.Length, OpCode.OP_TargetMouse, curZoneId, curInstanceId, TargetMouseRequest);
 
 
 		}
@@ -179,7 +179,7 @@ namespace EQBrowser
 			byte[] DoLootRequest = new byte[4];
 			Int32 position = 0;
 			WriteInt32(OurTargetLootID, ref DoLootRequest, ref position);
-			GenerateAndSendWorldPacket (DoLootRequest.Length, 300 /* OP_DeleteSpawn */, curZoneId, curInstanceId, DoLootRequest);
+			GenerateAndSendWorldPacket (DoLootRequest.Length, OpCode.OP_LootRequest, curZoneId, curInstanceId, DoLootRequest);
 			Debug.Log("Looting: " + OurTargetLootID);
 			UIScript.InventoryClick("clack");
 		}
@@ -189,7 +189,7 @@ namespace EQBrowser
 			byte[] DoEndLootRequest = new byte[4];
 			Int32 position = 0;
 			WriteInt32(OurTargetLootID, ref DoEndLootRequest, ref position);
-			GenerateAndSendWorldPacket (DoEndLootRequest.Length, 148 /* OP_DeleteSpawn */, curZoneId, curInstanceId, DoEndLootRequest);
+            GenerateAndSendWorldPacket(DoEndLootRequest.Length, OpCode.OP_EndLootRequest, curZoneId, curInstanceId, DoEndLootRequest);
 			
 			Debug.Log("EndLoot: " + OurTargetLootID);
 			OurTargetLootID = 0;
@@ -214,7 +214,7 @@ namespace EQBrowser
 			byte[] DoLootCompleteRequest = new byte[1];
 			Int32 position = 0;
 			WriteInt8(0, ref DoLootCompleteRequest, ref position);
-			GenerateAndSendWorldPacket (DoLootCompleteRequest.Length, 298 /* OP_DeleteSpawn */, curZoneId, curInstanceId, DoLootCompleteRequest);
+			GenerateAndSendWorldPacket (DoLootCompleteRequest.Length, OpCode.OP_LootComplete, curZoneId, curInstanceId, DoLootCompleteRequest);
 			Debug.Log("LootComplete");
 
 		}
@@ -240,7 +240,7 @@ namespace EQBrowser
 			byte[] DeleteSpawnRequest = new byte[4];
 			int position = 0;
 			WriteInt8(toggle, ref DeleteSpawnRequest, ref position); 
-			GenerateAndSendWorldPacket (DeleteSpawnRequest.Length, 43 /* OP_DeleteSpawn */, curZoneId, curInstanceId, DeleteSpawnRequest);
+			GenerateAndSendWorldPacket (DeleteSpawnRequest.Length, OpCode.OP_AutoAttack, curZoneId, curInstanceId, DeleteSpawnRequest);
 			DoAttack2(toggle);
 		}
 		public void DoAttack2(byte toggle)
@@ -248,7 +248,7 @@ namespace EQBrowser
 			byte[] DeleteSpawnRequest = new byte[4];
 			int position = 0;
 			WriteInt8(toggle, ref DeleteSpawnRequest, ref position); 
-			GenerateAndSendWorldPacket (DeleteSpawnRequest.Length, 44 /* OP_DeleteSpawn */, curZoneId, curInstanceId, DeleteSpawnRequest);
+			GenerateAndSendWorldPacket (DeleteSpawnRequest.Length, OpCode.OP_AutoAttack2, curZoneId, curInstanceId, DeleteSpawnRequest);
 		}
 		
 		public void DoDeleteSpawn(int spawnid)
@@ -258,7 +258,7 @@ namespace EQBrowser
 			int position = 0;
 			
 			WriteInt32(120, ref DeleteSpawnRequest, ref position);
-			GenerateAndSendWorldPacket (DeleteSpawnRequest.Length, 116 /* OP_DeleteSpawn */, curZoneId, curInstanceId, DeleteSpawnRequest);
+			GenerateAndSendWorldPacket (DeleteSpawnRequest.Length, OpCode.OP_DeleteSpawn, curZoneId, curInstanceId, DeleteSpawnRequest);
 			
 		}
 		
@@ -305,7 +305,7 @@ namespace EQBrowser
 			WriteInt32(BitConverter.ToInt32(BitConverter.GetBytes(h), 0), ref PositionUpdateRequest, ref position);
 			if(playerLock == false)
 			{
-				GenerateAndSendWorldPacket (PositionUpdateRequest.Length, 87 /* OP_ClientUpdate */, curZoneId, curInstanceId, PositionUpdateRequest);
+				GenerateAndSendWorldPacket (PositionUpdateRequest.Length, OpCode.OP_ClientUpdate, curZoneId, curInstanceId, PositionUpdateRequest);
 			}
 		}
 		
@@ -328,7 +328,7 @@ namespace EQBrowser
 			WriteFixedLengthString(name, ref EnterWorldRequest, ref position,  64); //charname
 			WriteInt32(0, ref EnterWorldRequest, ref position); // enter tutorial
 			WriteInt32(0, ref EnterWorldRequest, ref position); // return home
-			GenerateAndSendWorldPacket (EnterWorldRequest.Length, 151 /* OP_EnterWorld */, -1, -1, EnterWorldRequest);
+			GenerateAndSendWorldPacket (EnterWorldRequest.Length, OpCode.OP_EnterWorld, -1, -1, EnterWorldRequest);
 		}
 
 		public void DoDeleteChar(string name)
@@ -340,7 +340,7 @@ namespace EQBrowser
 			int position = 0;
 
 			WriteFixedLengthString(name, ref DeleteCharRequest, ref position,  64); //charname
-			GenerateAndSendWorldPacket (DeleteCharRequest.Length, 112 /* OP_DeleteCharacter */, -1, -1, DeleteCharRequest);				
+			GenerateAndSendWorldPacket (DeleteCharRequest.Length, OpCode.OP_DeleteCharacter, -1, -1, DeleteCharRequest);				
 		}
 		
 		public void DoLogOut()
@@ -348,7 +348,7 @@ namespace EQBrowser
 			byte[] LogOutRequest = new byte[2];
 			int position = 0;
 			WriteInt8(0, ref LogOutRequest, ref position);
-			GenerateAndSendWorldPacket (LogOutRequest.Length, 295 /* OP_LogOut */, curZoneId, curInstanceId, LogOutRequest);				
+			GenerateAndSendWorldPacket (LogOutRequest.Length, OpCode.OP_LogOut, curZoneId, curInstanceId, LogOutRequest);				
 		}
 
 		public void DoNameApproval()
@@ -367,7 +367,7 @@ namespace EQBrowser
 			WriteFixedLengthString(TidyName, ref NameApprovalRequest, ref position,  64);
 			WriteInt32(CSel._RaceSelection, ref NameApprovalRequest, ref position);
 			WriteInt32(CSel._ClassSelection, ref NameApprovalRequest, ref position);
-			GenerateAndSendWorldPacket (NameApprovalRequest.Length, 36 /* OP_ApproveName */, -1, -1, NameApprovalRequest);	
+			GenerateAndSendWorldPacket (NameApprovalRequest.Length, OpCode.OP_ApproveName, -1, -1, NameApprovalRequest);	
 
 
 		}
@@ -378,7 +378,7 @@ namespace EQBrowser
 			int position = 0;
 
 			WriteInt8(0, ref WorldCompleteRequest, ref position); 
-			GenerateAndSendWorldPacket (WorldCompleteRequest.Length, 531 /* OP_WorldComplete */, -1, -1, WorldCompleteRequest);				
+			GenerateAndSendWorldPacket (WorldCompleteRequest.Length, OpCode.OP_WorldComplete, -1, -1, WorldCompleteRequest);				
 		}
 		
 		public void DoCamp()
@@ -387,7 +387,7 @@ namespace EQBrowser
 			int position = 0;
 			DoDeleteSpawn(OurEntityID);
 			WriteInt32(0, ref CampRequest, ref position); 
-			GenerateAndSendWorldPacket (CampRequest.Length, 64 /* OP_Camp */, curZoneId, curInstanceId, CampRequest);				
+			GenerateAndSendWorldPacket (CampRequest.Length, OpCode.OP_Camp, curZoneId, curInstanceId, CampRequest);				
 		}
 		
 		public void DoZoneEntry()
@@ -400,7 +400,7 @@ namespace EQBrowser
 			WriteInt32 (0, ref ZoneEntryRequest, ref pos);
 			WriteFixedLengthString(ourPlayerName, ref ZoneEntryRequest, ref pos, 64);
 			AttemptingZoneConnect = false;
-			GenerateAndSendWorldPacket (ZoneEntryRequest.Length, 541, curZoneId, curInstanceId, ZoneEntryRequest);
+			GenerateAndSendWorldPacket (ZoneEntryRequest.Length, OpCode.OP_ZoneEntry, curZoneId, curInstanceId, ZoneEntryRequest);
 //joinkles
 //			GenerateAndSendWorldPacket (ZoneEntryRequest.Length, 541, 2, curInstanceId, ZoneEntryRequest);
 		}
@@ -413,7 +413,7 @@ namespace EQBrowser
 			WriteInt16 ((short)OurEntityID, ref SpawnRequest, ref position);
 			WriteInt16 (14, ref SpawnRequest, ref position);
 			WriteInt32 (110, ref SpawnRequest, ref position);
-			GenerateAndSendWorldPacket (SpawnRequest.Length, 465, curZoneId, curInstanceId, SpawnRequest);
+			GenerateAndSendWorldPacket (SpawnRequest.Length, OpCode.OP_SpawnAppearance, curZoneId, curInstanceId, SpawnRequest);
 		}
 		
 		//op_spawnappearance
@@ -424,7 +424,7 @@ namespace EQBrowser
 			WriteInt16 ((short)OurEntityID, ref SpawnRequest, ref position);
 			WriteInt16 (14, ref SpawnRequest, ref position);
 			WriteInt32 (100, ref SpawnRequest, ref position);
-			GenerateAndSendWorldPacket (SpawnRequest.Length, 465, curZoneId, curInstanceId, SpawnRequest);
+			GenerateAndSendWorldPacket (SpawnRequest.Length, OpCode.OP_SpawnAppearance, curZoneId, curInstanceId, SpawnRequest);
 		}
 
 		
@@ -920,7 +920,7 @@ namespace EQBrowser
 			Int32 pos = 0;
 			WriteInt32 (0, ref ZoneEntryRequest, ref pos);
 			WriteFixedLengthString(ourPlayerName, ref ZoneEntryRequest, ref pos, 64);
-			GenerateAndSendWorldPacket (ZoneEntryRequest.Length, 541, curZoneId, curInstanceId, ZoneEntryRequest);
+			GenerateAndSendWorldPacket (ZoneEntryRequest.Length, OpCode.OP_ZoneEntry, curZoneId, curInstanceId, ZoneEntryRequest);
 			
 			isTyping = false;
 			AttemptingZoneConnect = false;
@@ -1382,7 +1382,7 @@ namespace EQBrowser
 			float h = Mathf.Lerp(360,0,heading/255f);
 			us.transform.localEulerAngles = new Vector3(0,h,0);
 			
-			GenerateAndSendWorldPacket (0, 403 /* OP_ReqNewZone */, curZoneId, curInstanceId, NewZoneRequest);
+			GenerateAndSendWorldPacket (0, OpCode.OP_ReqNewZone, curZoneId, curInstanceId, NewZoneRequest);
 			
 //			if(platinum > 0){googleAnalytics.LogEvent("Currency_PP-Inventory", ourPlayerName, "Platinum", platinum);}
 //			if(gold > 0){googleAnalytics.LogEvent("Currency_PP-Inventory", ourPlayerName, "Gold", gold);}
@@ -1442,7 +1442,7 @@ namespace EQBrowser
 //			RenderSettings.fogColor = c;
 //			Camera.main.farClipPlane = maxclip;
 //			RenderSettings.fog = true;
- 			GenerateAndSendWorldPacket (0, 402 /* OP_ReqClientSpawn */, curZoneId, curInstanceId, ReqClientSpawn);
+ 			GenerateAndSendWorldPacket (0, OpCode.OP_ReqClientSpawn, curZoneId, curInstanceId, ReqClientSpawn);
 		}
 
 		public void HandleWorldMessage_NewSpawn(byte[] data, int datasize, bool fromWorld)
@@ -1477,7 +1477,7 @@ namespace EQBrowser
 			WriteInt32(0, ref PositionUpdateRequest, ref pos);
 			WriteInt32(0, ref PositionUpdateRequest, ref pos);
 			WriteInt32(0, ref PositionUpdateRequest, ref pos);
-			GenerateAndSendWorldPacket(PositionUpdateRequest.Length, 468 /* OP_EmuKeepAlive */, curZoneId, curInstanceId, PositionUpdateRequest);
+			GenerateAndSendWorldPacket(PositionUpdateRequest.Length, OpCode.OP_EmuKeepAlive, curZoneId, curInstanceId, PositionUpdateRequest);
 			
 
 		}
@@ -1506,7 +1506,7 @@ namespace EQBrowser
 //			Application.LoadLevel(SceneManagerObj.zoneName);
 //			SceneManagerObj.Singleton.TrueStart();
 //			SceneManagerObj.Singleton.ForceCamera(SceneManagerObj.CameraMode.ThirdPersonLocked);
-			GenerateAndSendWorldPacket (0, 85 /* OP_ClientReady */, curZoneId, curInstanceId, NotifyClientReady);
+			GenerateAndSendWorldPacket (0, OpCode.OP_ClientReady, curZoneId, curInstanceId, NotifyClientReady);
 		}
 
 //424		
@@ -1537,13 +1537,13 @@ namespace EQBrowser
 			WriteInt32(BitConverter.ToInt32(BitConverter.GetBytes(controller.velocity.magnitude), 0), ref PositionUpdateRequest, ref position);
 			WriteInt32(BitConverter.ToInt32(BitConverter.GetBytes(h), 0), ref PositionUpdateRequest, ref position);
 
-			GenerateAndSendWorldPacket (PositionUpdateRequest.Length, 87 /* OP_ClientUpdate */, curZoneId, curInstanceId, PositionUpdateRequest);
+			GenerateAndSendWorldPacket (PositionUpdateRequest.Length, OpCode.OP_ClientUpdate, curZoneId, curInstanceId, PositionUpdateRequest);
 		}
 
 		public void HandleWorldMessage_EmuKeepAlive(byte[] data, int datasize, bool fromWorld)
 		{
 			byte[] KeepAlive = null;
-			GenerateAndSendWorldPacket (0, 550 /* OP_EmuKeepAlive */, curZoneId, curInstanceId, KeepAlive);
+			GenerateAndSendWorldPacket (0, OpCode.OP_EmuKeepAlive, curZoneId, curInstanceId, KeepAlive);
 		}
 	
 		public void HandleWorldMessage_MoneyOnCorpse(byte[] data, int datasize, bool fromWorld)
@@ -1654,7 +1654,7 @@ namespace EQBrowser
 				WriteInt32(0, ref CharCreateRequest, ref pos); //Drakkin Tattoo
 				WriteInt32(0, ref CharCreateRequest, ref pos); //Drakkin Details
 				WriteInt32(1, ref CharCreateRequest, ref pos); //Tutorial is selected?
-				GenerateAndSendWorldPacket (CharCreateRequest.Length, 70 /* OP_CharacterCreate */, -1, -1, CharCreateRequest);
+				GenerateAndSendWorldPacket (CharCreateRequest.Length, OpCode.OP_CharacterCreate, -1, -1, CharCreateRequest);
 
 				string TidyName = CSel.TidyCase(CSel.CreationName.text);
 //				googleAnalytics.LogEvent("CharCreate", "Name", TidyName, 1);

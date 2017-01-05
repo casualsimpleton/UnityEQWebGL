@@ -352,6 +352,12 @@ namespace EQBrowser {
 			//Request Entity Positions from server
 		}
 
+        public void GenerateAndSendWorldPacket(int pktsize, OpCode opcode, Int32 zoneid, Int32 instanceid, params byte[][] list)
+        {
+            short opCodeShort = (short)opcode;
+            GenerateAndSendWorldPacket(pktsize, opCodeShort, zoneid, instanceid, list);
+        }
+
 		public void GenerateAndSendWorldPacket(int pktsize, short opcode, Int32 zoneid, Int32 instanceid, params byte[][] list)
 		{
 			string serialized = GenerateWorldPacket(pktsize, opcode, zoneid, instanceid, list);
@@ -382,9 +388,9 @@ namespace EQBrowser {
 							RawData = System.Convert.FromBase64CharArray (IdChecker1.data.ToCharArray(), 0, IdChecker1.data.Length);
 						}
 
-                        OpCode opcodeShort = (OpCode)short.Parse(IdChecker1.opcode);
+                        OpCode opcodeConverted = (OpCode)short.Parse(IdChecker1.opcode);
 
-                        if (opCodes.ContainsKey(opcodeShort))
+                        if (opCodes.ContainsKey(opcodeConverted))
                         {
                             int len = 0;
                             if (RawData != null)
@@ -392,12 +398,13 @@ namespace EQBrowser {
                                 len = RawData.Length;
                             }
 
-                            opCodes[opcodeShort](RawData, len, IdChecker1.zoneid == "-1" ? true : false);
+                            opCodes[opcodeConverted](RawData, len, IdChecker1.zoneid == "-1" ? true : false);
                             packetsLatestSecond++;
                             packetsTotal++;
                         }
                         else
                         {
+                            Debug.LogWarningFormat("Unhandled OpCode: {0}", opcodeConverted);
                             packetsUnhandledType++;
                             packetsTotal++;
                         }

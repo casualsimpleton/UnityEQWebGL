@@ -48,12 +48,17 @@ public class ObjectPool : MonoBehaviour
 
     public List<GameObject> spawnlist;
 
+    System.Diagnostics.Stopwatch _startTimer;
+
     /// <summary>
     /// The container object that we will keep unused pooled objects so we dont clog up the editor with objects.
     /// </summary>
     protected GameObject ContainerObject;
     void Awake()
     {
+        _startTimer = new System.Diagnostics.Stopwatch();
+        _startTimer.Start();
+
         DontDestroyOnLoad(transform.gameObject);
     }
     void OnEnable()
@@ -88,6 +93,10 @@ public class ObjectPool : MonoBehaviour
                     PoolObject(newObj);
             }
         }
+
+        _startTimer.Stop();
+        Debug.LogWarningFormat("ObjectPool Time: {0}s", _startTimer.ElapsedMilliseconds * 0.001f);
+        _startTimer = null;
     }
 
 

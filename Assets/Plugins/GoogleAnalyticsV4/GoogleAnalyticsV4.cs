@@ -104,6 +104,8 @@ public class GoogleAnalyticsV4 : MonoBehaviour {
   public readonly static string TIMING_HIT = "createTiming";
   public readonly static string EXCEPTION_HIT = "createException";
 
+  System.Diagnostics.Stopwatch _startTimer;
+
 #if UNITY_ANDROID && !UNITY_EDITOR
   private GoogleAnalyticsAndroidV4 androidTracker = new GoogleAnalyticsAndroidV4();
 #elif UNITY_IPHONE && !UNITY_EDITOR
@@ -113,6 +115,9 @@ public class GoogleAnalyticsV4 : MonoBehaviour {
 #endif
 
   void Awake() {
+      _startTimer = new System.Diagnostics.Stopwatch();
+      _startTimer.Start();
+
     InitializeTracker ();
     if (sendLaunchEvent) {
       LogEvent("Google Analytics", "Auto Instrumentation", "Game Launch", 0);
@@ -128,6 +133,10 @@ public class GoogleAnalyticsV4 : MonoBehaviour {
         Debug.Log("Enabling uncaught exception reporting.");
       }
     }
+
+    _startTimer.Stop();
+    Debug.LogWarningFormat("Google Analytics Time: {0}s", _startTimer.ElapsedMilliseconds * 0.001f);
+    _startTimer = null;
   }
 
   void Update() {

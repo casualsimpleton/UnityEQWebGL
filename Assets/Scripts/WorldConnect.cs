@@ -38,6 +38,9 @@ namespace EQBrowser {
 
 		public void Awake() 
 		{
+            _startTimer = new System.Diagnostics.Stopwatch();
+            _startTimer.Start();
+
 			if(instance)
 			DestroyImmediate(WorldConnectObject);
 			else
@@ -162,10 +165,11 @@ namespace EQBrowser {
 
 		Dictionary<string, OpcodeFunc> opcodeDict;
         Dictionary<OpCode, OpcodeFunc> opCodes;
-
+        System.Diagnostics.Stopwatch _startTimer;
 				
 		void Start()
 	    {
+
 //			googleAnalytics.StartSession();
 			instance = this;
 
@@ -249,7 +253,9 @@ namespace EQBrowser {
 
             //Auto-Connect to Salty Server
             //			StartCoroutine(ConnectToWebSocketServer("158.69.221.200", "aksdjlka23ij3l1j23lk1j23j123jkjql", "XLOGINX", "XPASSWORDX"));
-
+            _startTimer.Stop();
+            Debug.LogWarningFormat("World Connect: {0}s", _startTimer.ElapsedMilliseconds * 0.001f);
+            _startTimer = null;
         }
 
 	    public class Auth

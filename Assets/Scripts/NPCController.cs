@@ -53,11 +53,11 @@ public class NPCController : MonoBehaviour
 
 	public bool isTarget = false;
 	public bool colorActivate = false;
-	public int isWalk;
-	public int isIdle;
-	public int isDead;
-	public int isPunch;
-	public int isHurt;
+	public int _anim_isWalk;
+	public int _anim_isIdle;
+	public int _anim_isDead;
+	public int _anim_isPunch;
+	public int _anim_isHurt;
 	public bool clientUpdate;
 
 	public int animationspeed;
@@ -86,12 +86,12 @@ public class NPCController : MonoBehaviour
 #if UNITY_EDITOR
     protected float _lastUpdateTime;
 #endif
-    protected Vector3 _velocity = new Vector3(0,0,0);
-    protected float _dampSpeed = 2.5f;
 
     void Awake()
     {
         _transform = this.transform;
+
+        TerrainMask = (1 << LayerMask.NameToLayer("Terrain"));
     }
 	
 	void Start()
@@ -130,7 +130,8 @@ public class NPCController : MonoBehaviour
 		//if player respawned, reset NPC name Vars in Start
 		if(playerRespawn == true){Start();playerRespawn = false;}
 		//overhead names face player
-		if(Camera.main.velocity != new Vector3(0,0,0) || this.controller.velocity != new Vector3(0,0,0) || updateHeading == true)
+		
+        if(Camera.main.velocity != new Vector3(0,0,0) || this.controller.velocity != new Vector3(0,0,0) || updateHeading == true)
 		{
 			NameObject.transform.LookAt(2 * NameObject.transform.position - Camera.main.transform.position);
 		}
@@ -162,123 +163,176 @@ public class NPCController : MonoBehaviour
 		}
 		
 		// TODO-performance: Only do this when the NPC hp changes (specifically it decreases)
-		if(NPC == NPCType.PC_Corpse || isDead == 1)
+		if(NPC == NPCType.PC_Corpse || _anim_isDead == 1)
         {
-            deadNow();
+            if (_anim_isDead != 1)
+            {
+                AnimDeadNow();
+            }
         }
 		else
 		{
 			//wandering
 			// TODO-performance: When a update arrives store whether or not the NPC is moving. Calculating magnitude involves sqrt 
 			//if (deltaF.magnitude != 0)
-			{
+//            {
 				
-				//step = delta time x speed. The server is calculating the speed which is represented as the magnitude of vector x y z. Translate the game object by those deltas multiplied by delta time
-				if(NPC == NPCType.NPC)
-				{
-					step = deltaF.magnitude * 10f;
-					//sets clientupdate flag to false when an npc is autorunning, waiting for another clientupdate packet
-                    if (_transform.position.x == movetoX && _transform.position.z == movetoZ) { clientUpdate = false; }
-					//if new update from server, move there
-					if(clientUpdate == true)
-					{
-						//initial movement
-						ycalc = _transform.position.y;
-						targetPosition.x = movetoX;
-						targetPosition.z = movetoZ;
-					}
-					//if waiting on update from server, move along the delta positions
-					if(clientUpdate == false)
-					{
-						//continuing to move in between updates
-						// TODO-performance: Store this when the pos packet arrives
-						targetPosition.x += deltaX;
-						targetPosition.z += deltaZ;
-					}
+//                //step = delta time x speed. The server is calculating the speed which is represented as the magnitude of vector x y z. Translate the game object by those deltas multiplied by delta time
+//                if(NPC == NPCType.NPC)
+//                {
+//                    step = deltaF.magnitude * 10f;
+//                    //sets clientupdate flag to false when an npc is autorunning, waiting for another clientupdate packet
+//                    if (_transform.position.x == movetoX && _transform.position.z == movetoZ) { clientUpdate = false; }
+//                    //if new update from server, move there
+//                    if(clientUpdate == true)
+//                    {
+//                        //initial movement
+//                        ycalc = _transform.position.y;
+//                        targetPosition.x = movetoX;
+//                        targetPosition.z = movetoZ;
+//                    }
+//                    //if waiting on update from server, move along the delta positions
+//                    if(clientUpdate == false)
+//                    {
+//                        //continuing to move in between updates
+//                        // TODO-performance: Store this when the pos packet arrives
+//                        targetPosition.x += deltaX;
+//                        targetPosition.z += deltaZ;
+//                    }
 
-					//move now
-					raycastY();
-					targetPosition.y = _transform.position.y;
+//                    //move now
+//                    raycastY();
+//                    targetPosition.y = _transform.position.y;
+
+////#if UNITY_EDITOR
+////                    if (Selection.activeGameObject == this.gameObject)
+////                    {
+////                        Debug.Log(string.Format("Moving NPC ID: {0} Time: {1} CurPos: {2} TarPos: {3} Step: {4} dT: {5}",
+////                            spawnId, Time.time, _transform.position, targetPosition, step, Time.deltaTime));
+////                    }
+////#endif
+
+//                    //float distFromTargetSqr = Vector2.SqrMagnitude(new Vector2(_transform.position.x, _transform.position.z) - new Vector2(targetPosition.x, targetPosition.z));
+                    
+//                    Vector3 newPos = _transform.position + (deltaF * step * Time.deltaTime);
+//                    float dotProd = Vector3.Dot(targetPosition, newPos);
+
+//                    if (dotProd > 0)
+//                    {
+//                        _transform.position = newPos;
+//                    }
+
+//                    //if (distFromTargetSqr > 0.1f)
+//                    {
+//                        //_transform.position = Vector3.MoveTowards(_transform.position, targetPosition, step * Time.deltaTime);
+//                        //_transform.position = Vector3.SmoothDamp(_transform.position, targetPosition, ref _velocity, _dampSpeed);
+
+//                        //_transform.position = _transform.position + (deltaF * step * Time.deltaTime);
+//                    }
+
+//                    if (deltaX == 0 && deltaY == 0 && deltaZ == 0 && movetoX != 0 && movetoY != 0 && movetoZ != 0)
+//                    {
+//                        if (isIdle == 0)// && distFromTargetSqr < 0.5f)
+//                        {
+//                            _transform.position = new Vector3(movetoX, _transform.position.y, movetoZ);
+//                            idleNow();
+//                        }
+//                    }
+//                    else
+//                    {
+//                        if (isWalk == 0) 
+//                        { 
+//                            walkNow(); 
+//                        }
+//                    }
+////#if UNITY_EDITOR
+////                    else
+////                    {
+////                        if (Selection.activeGameObject == this.gameObject)
+////                        {
+////                            Debug.Log(string.Format("Inside epsilon step: {0} deltaF: {1:0.000}", step, deltaF));
+////                        }
+////                    }
+////#endif
 
 //#if UNITY_EDITOR
 //                    if (Selection.activeGameObject == this.gameObject)
 //                    {
-//                        Debug.Log(string.Format("Moving NPC ID: {0} Time: {1} CurPos: {2} TarPos: {3} Step: {4} dT: {5}",
+//                        DebugMovementHelper();
+//                    }
+//#endif
+//                }
+//                //if this a player not an npc
+//                else
+//                {
+//#if UNITY_EDITOR
+//                    if (Selection.activeGameObject == this.gameObject)
+//                    {
+//                        Debug.Log(string.Format("Moving PC ID: {0} Time: {1} CurPos: {2} TarPos: {3} Step: {4} dT: {5}",
 //                            spawnId, Time.time, _transform.position, targetPosition, step, Time.deltaTime));
 //                    }
 //#endif
-
-                    //float distFromTargetSqr = Vector2.SqrMagnitude(new Vector2(_transform.position.x, _transform.position.z) - new Vector2(targetPosition.x, targetPosition.z));
-
-                    Vector3 newPos = _transform.position + (deltaF * step * Time.deltaTime);
-                    float dotProd = Vector3.Dot(targetPosition, newPos);
-
-                    if (dotProd > 0)
-                    {
-                        _transform.position = newPos;
-                    }
-
-                    //if (distFromTargetSqr > 0.1f)
-                    {
-                        //_transform.position = Vector3.MoveTowards(_transform.position, targetPosition, step * Time.deltaTime);
-                        //_transform.position = Vector3.SmoothDamp(_transform.position, targetPosition, ref _velocity, _dampSpeed);
-
-                        //_transform.position = _transform.position + (deltaF * step * Time.deltaTime);
-                    }
-
-                    if (deltaX == 0 && deltaY == 0 && deltaZ == 0 && movetoX != 0 && movetoY != 0 && movetoZ != 0)
-                    {
-                        if (isIdle == 0)// && distFromTargetSqr < 0.5f)
-                        {
-                            _transform.position = new Vector3(movetoX, _transform.position.y, movetoZ);
-                            idleNow();
-                        }
-                    }
-                    else
-                    {
-                        if (isWalk == 0) 
-                        { 
-                            walkNow(); 
-                        }
-                    }
-//#if UNITY_EDITOR
-//                    else
-//                    {
-//                        if (Selection.activeGameObject == this.gameObject)
-//                        {
-//                            Debug.Log(string.Format("Inside epsilon step: {0} deltaF: {1:0.000}", step, deltaF));
-//                        }
-//                    }
-//#endif
-
-#if UNITY_EDITOR
-                    if (Selection.activeGameObject == this.gameObject)
-                    {
-                        DebugMovementHelper();
-                    }
-#endif
-				}
-				//if this a player not an npc
-				else
-				{
-#if UNITY_EDITOR
-                    if (Selection.activeGameObject == this.gameObject)
-                    {
-                        Debug.Log(string.Format("Moving PC ID: {0} Time: {1} CurPos: {2} TarPos: {3} Step: {4} dT: {5}",
-                            spawnId, Time.time, _transform.position, targetPosition, step, Time.deltaTime));
-                    }
-#endif
-					targetPosition = new Vector3 (movetoX,movetoY,movetoZ);
-					_transform.position = Vector3.MoveTowards(_transform.position, targetPosition, 1);
-				}
+//                    targetPosition = new Vector3 (movetoX,movetoY,movetoZ);
+//                    _transform.position = Vector3.MoveTowards(_transform.position, targetPosition, 1);
+//                }
 			
-			//draw pretty lines of pathing for scene editor
-			//Debug.DrawRay (_transform.position, (_transform.position - targetPosition), Color.green);
-			//Debug.DrawRay (_transform.position, (targetPosition - _transform.position), Color.green);
-                Debug.DrawLine(_transform.position, targetPosition, Color.green);
-                Debug.DrawLine(_transform.position, new Vector3(movetoX, movetoY, movetoZ), Color.blue);
+//            //draw pretty lines of pathing for scene editor
+//            //Debug.DrawRay (_transform.position, (_transform.position - targetPosition), Color.green);
+//            //Debug.DrawRay (_transform.position, (targetPosition - _transform.position), Color.green);
+//                Debug.DrawLine(_transform.position, targetPosition, Color.green);
+//                Debug.DrawLine(_transform.position, new Vector3(movetoX, movetoY, movetoZ), Color.blue);
 
-			}
+//            }
+
+            //Calculate delta magnitude just once since we may use it in multiple areas
+            float deltaMag = deltaF.magnitude;
+
+            if (deltaMag != 0f)
+            {
+                //Check animation state - should be walking if it's not
+                if (_anim_isWalk == 0)
+                {
+                    AnimWalkNow();
+                }
+
+                //Just a guess at the speed - 10 seems to work well
+                step = deltaMag * 10f * Time.deltaTime;
+
+                //If it's an NPC and not a player, we're going to path it between its current position and it's goal position
+                if (NPC == NPCType.NPC)
+                {
+                    //NPC is not where we want them to be, so keep moving them forward - we're only here because we already checked deltas were not 0, otherwise we want to teleport them probably
+                    if (_transform.position.x != movetoX || _transform.position.z != movetoZ)
+                    {
+                        controller.Move(deltaF * step);
+                    }
+
+                }
+                //It's a player, we just use dead reckoning - point them in the direction they were last known, and move them forward at their last known speed
+                else
+                {
+                    controller.Move(deltaF * step);
+                }
+            }
+            else
+            {
+                if (_anim_isIdle == 0)
+                {
+                    AnimIdleNow();
+                }
+            }
+
+            CheckYHeight(updateDeltas);
+
+            Debug.DrawLine(_transform.position, new Vector3(movetoX, movetoY, movetoZ), Color.green);
+
+
+
+
+
+
+
+
 			//idle npc after reaching a target destination.
             //else
             //{
@@ -300,6 +354,53 @@ public class NPCController : MonoBehaviour
             //}
 		}
 	}
+
+    RaycastHit[] _yRayHits = new RaycastHit[2];
+    public static int TerrainMask; 
+    protected int _rayFrameCount;
+    public void CheckYHeight(bool forceCheck = false)
+    {
+        //Do this every 2 frames to offset some of the cost, or skip if we're not moving
+        _rayFrameCount++;
+        if (_rayFrameCount < 2 || forceCheck)
+        {
+            return;
+        }
+
+        _rayFrameCount = 0;
+
+        //Use non alloc raycast to reduce GC impact.
+        //We're going to offset the ray origin up a bit since there is a small chance we could have clipped through the ground a smidge
+        //TOOD - Consider using half the physical size so the ray comes from the mid point (waist-ish) area
+        int hitCount = Physics.RaycastNonAlloc(_transform.position + (Vector3.up * 1), Vector3.down, _yRayHits, 200f, TerrainMask);
+
+        if (hitCount > 0)
+        {
+            for (int i = 0; i < hitCount; i++)
+            {
+                //Don't need to check the tag, since we're assuming the walk-able terrain is on the correct layer
+                //Bump them down a smidge
+                if (_yRayHits[i].distance > 3.1f)
+                {
+                    //_transform.position -= new Vector3(0f,20f * Time.deltaTime,0f);
+                    _transform.position -= new Vector3(0, _yRayHits[i].distance, 0f);
+                }
+
+                //Bump them up a bit... why 3?
+                if (_yRayHits[i].distance < 3)
+                {
+                    //_transform.position += new Vector3(0f,20f * Time.deltaTime,0f);
+                    _transform.position += new Vector3(0, _yRayHits[i].distance, 0f);
+                }
+            }
+        }
+        else
+        {
+            //We must be way up in the air or something, keep moving
+            //TODO - We probably want them to fall, not move up
+            _transform.position += new Vector3(0, 20f * Time.deltaTime * 2, 0f);
+        }
+    }
 	
 	public void raycastY()
 	{
@@ -332,53 +433,53 @@ public class NPCController : MonoBehaviour
         }
 	}
 	
-	public void walkNow()
+	public void AnimWalkNow()
 	{
-		isWalk = 1;
-		isIdle = 0;
-		isPunch = 0;
-		isDead = 0;
-		isHurt = 0;
+		_anim_isWalk = 1;
+		_anim_isIdle = 0;
+		_anim_isPunch = 0;
+		_anim_isDead = 0;
+		_anim_isHurt = 0;
 		GetComponent<Animator>().Play("Walk");
 	}
 
-	public void idleNow()
+	public void AnimIdleNow()
 	{
-		isWalk = 0;
-		isIdle = 1;
-		isPunch = 0;
-		isDead = 0;
-		isHurt = 0;
+		_anim_isWalk = 0;
+		_anim_isIdle = 1;
+		_anim_isPunch = 0;
+		_anim_isDead = 0;
+		_anim_isHurt = 0;
 		GetComponent<Animator>().Play("Idle");
 	}
 
-	public void punchNow()
+	public void AnimPunchNow()
 	{
-		isWalk = 0;
-		isIdle = 0;
-		isPunch = 1;
-		isDead = 0;
-		isHurt = 0;
+		_anim_isWalk = 0;
+		_anim_isIdle = 0;
+		_anim_isPunch = 1;
+		_anim_isDead = 0;
+		_anim_isHurt = 0;
 		GetComponent<Animator>().Play("Punch");
 	}
 
-	public void hurtNow()
+	public void AnimHurtNow()
 	{
-		isWalk = 0;
-		isIdle = 0;
-		isPunch = 0;
-		isDead = 0;
-		isHurt = 1;
+		_anim_isWalk = 0;
+		_anim_isIdle = 0;
+		_anim_isPunch = 0;
+		_anim_isDead = 0;
+		_anim_isHurt = 1;
 		GetComponent<Animator>().Play("Hurt");
 	}
 
-	public void deadNow()
+	public void AnimDeadNow()
 	{
-		isWalk = 0;
-		isIdle = 0;
-		isPunch = 0;
-		isDead = 1;
-		isHurt = 0;
+		_anim_isWalk = 0;
+		_anim_isIdle = 0;
+		_anim_isPunch = 0;
+		_anim_isDead = 1;
+		_anim_isHurt = 0;
 		GetComponent<Animator>().Play("Dead");
 		name = NameObject.GetComponent<TextMesh>().text + "'s corpse";
 	}
@@ -427,16 +528,14 @@ public class NPCController : MonoBehaviour
 
     public void SetXYZRotDeltaXYZR(float newX, float newY, float newZ, float newH, int animSpeed, float dX, float dY, float dZ, float dH)
     {
-        _dampSpeed = (Time.time - _lastUpdateTime ) * 0.5f;
-
 #if UNITY_EDITOR
         //If we've got the entity selected in the scene, we'll print detailed shit here to log for easier tracking via console - Casual
         //Printing name last, since for some reason it truncates the rest of the message, too lazy to figure out why
         if (Selection.activeGameObject == this.gameObject)
         {
-            Debug.Log(string.Format("ID: {0} Time: {1} dT: {24} curX: {21} curY: {22} curZ: {23} mtX: {2} mtY: {3} mtZ: {4} mtH: {5} animSpeed: {6} dX: {7} dY: {8} dZ: {9} dH: {10}\n In X: {11} Y: {12} Z: {13} H: {14} animSpeed: {15} DX: {16} DY: {17} DZ: {18} DH: {19}\nName: {20}",
+            Debug.Log(string.Format("ID: {0} Time: {1} curX: {21} curY: {22} curZ: {23} mtX: {2} mtY: {3} mtZ: {4} mtH: {5} animSpeed: {6} dX: {7} dY: {8} dZ: {9} dH: {10}\n In X: {11} Y: {12} Z: {13} H: {14} animSpeed: {15} DX: {16} DY: {17} DZ: {18} DH: {19}\nName: {20}",
                 spawnId, Time.time, movetoX, movetoY, movetoZ, movetoH, animationspeed, deltaX, deltaY, deltaZ, deltaH,
-                newX, newY, newZ, newH, animSpeed, dX, dY, dZ, dH, name, transform.position.x, transform.position.y, transform.position.z, _dampSpeed));
+                newX, newY, newZ, newH, animSpeed, dX, dY, dZ, dH, name, _transform.position.x, _transform.position.y, _transform.position.z));
 
             DebugMovementHelper();
         }
@@ -448,9 +547,6 @@ public class NPCController : MonoBehaviour
 #endif
 
         _transform.position = new Vector3(movetoX, movetoY, movetoZ);
-        _velocity.x = 0;
-        _velocity.y = 0;
-        _velocity.z = 0;
 
         movetoX = newX;
         movetoY = newY;
@@ -476,6 +572,9 @@ public class NPCController : MonoBehaviour
 
         deltaH = dH;
         clientUpdate = true;
+
+        _rayFrameCount = 0;
+        CheckYHeight(true);
     }
 
 #if UNITY_EDITOR

@@ -143,7 +143,7 @@ namespace EQBrowser
 				
 				temp.GetComponent<NPCController>().isTarget = true;
 				
-				int isDead = temp.GetComponent<NPCController>().isDead;
+				int isDead = temp.GetComponent<NPCController>()._anim_isDead;
 	
 				string targetClean = Regex.Replace(targetName, "[0-9]", "");
 				string targetName2 = Regex.Replace(targetClean, "[_]", " ");
@@ -743,7 +743,7 @@ namespace EQBrowser
 
 			if(temp != null)
 			{
-				temp.GetComponent<NPCController>().isDead = 1;
+				temp.GetComponent<NPCController>()._anim_isDead = 1;
 				temp.GetComponent<NPCController>().name = temp.GetComponent<NPCController>().name + "'s corpse";
 			}
 
@@ -1001,7 +1001,7 @@ namespace EQBrowser
 						controller.updateDeltas = false;
 						controller.clientUpdate = false;
 						controller.isTarget = false;
-						controller.isDead = 0;
+						controller._anim_isDead = 0;
 						controller.playerRespawn = false;
 						controller.movetoX = 0;
 						controller.movetoY = 0;

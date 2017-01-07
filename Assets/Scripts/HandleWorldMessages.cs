@@ -19,6 +19,8 @@ namespace EQBrowser
 		{
 			byte[] KeepAlive = null;
 			GenerateAndSendWorldPacket (0, OpCode.OP_EmuKeepAlive, curZoneId, curInstanceId, KeepAlive);
+
+            Debug.Log("-> Sent keep alive packet 1");
 		}
 		public void DoEmuRequestClose()
 		{
@@ -303,14 +305,6 @@ namespace EQBrowser
 			WriteInt32(0, ref PositionUpdateRequest, ref position);
 			WriteInt32(BitConverter.ToInt32(BitConverter.GetBytes(controller.velocity.magnitude), 0), ref PositionUpdateRequest, ref position);
 			WriteInt32(BitConverter.ToInt32(BitConverter.GetBytes(h), 0), ref PositionUpdateRequest, ref position);
-
-#if UNITY_EDITOR
-            if (DebugPositionTracker.IsLookingForUpdate())
-            {
-                DebugPositionTracker.AddData((short)OurEntityID, x, y, z, -controller.velocity.x, controller.velocity.z, controller.velocity.y,
-                    0, (int)controller.velocity.magnitude, h);
-            }
-#endif
 
 			if(playerLock == false)
 			{
@@ -1118,10 +1112,6 @@ namespace EQBrowser
                 temp = ObjectPool.instance.spawnlist.FirstOrDefault(obj => obj.name == spawn_id.ToString());
             }
 
-#if UNITY_EDITOR
-            DebugPositionTracker.CheckForMatches(spawn_id, -x, z, y, -deltaX, deltaZ, deltaY, deltaH, animationspeed, rotation);
-#endif
-
 //			GameObject temp = ObjectPool.instance.spawndict[spawn_id];
 			if(temp != null)
 			{
@@ -1491,8 +1481,8 @@ namespace EQBrowser
 			WriteInt32(0, ref PositionUpdateRequest, ref pos);
 			WriteInt32(0, ref PositionUpdateRequest, ref pos);
 			GenerateAndSendWorldPacket(PositionUpdateRequest.Length, OpCode.OP_EmuKeepAlive, curZoneId, curInstanceId, PositionUpdateRequest);
-			
 
+            Debug.Log("-> Sent keep alive packet 2");
 		}
 
 		public void HandleWorldMessage_PositionUpdate(byte[] data, int datasize, bool fromWorld)
@@ -1557,6 +1547,9 @@ namespace EQBrowser
 		{
 			byte[] KeepAlive = null;
 			GenerateAndSendWorldPacket (0, OpCode.OP_EmuKeepAlive, curZoneId, curInstanceId, KeepAlive);
+
+            //Debug.LogFormat("<- Received keep alive packet time: {0}", Time.time);
+            RegisterAliveTime();
 		}
 	
 		public void HandleWorldMessage_MoneyOnCorpse(byte[] data, int datasize, bool fromWorld)

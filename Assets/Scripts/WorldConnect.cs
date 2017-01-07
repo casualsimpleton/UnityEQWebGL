@@ -32,11 +32,34 @@ namespace EQBrowser {
 		public int isAttacking;
 
         //No ping yet, but we can keep track of packets per second to see if connection is moving.
-        public static int packetsLatestSecond;
-        public static long packetsUnhandledType;
-        public static long packetsTotal;
+        public static int PacketsLatestSecond;
+        public static long PacketsUnhandledType;
+        public static long PacketsTotal;
+        
+        #region Ping Calcs
+        protected float _firstPingTime;
+        protected int _numPings = -1;
+        public static int PingTime;
 
-		public void Awake() 
+        public void RegisterAliveTime()
+        {
+            ////EMU Server sends an alive msg every 10s. We're going to measure the time between them and try to figure out the travel time. Not perfect, but might be helpful
+            ////Convert from a decimal into millisec
+
+            if (_numPings < 0)
+            {
+                _firstPingTime = Time.time;
+            }
+
+            _numPings++;
+
+            float goalPingTime = _firstPingTime + (_numPings * 10f);
+
+            PingTime = Mathf.RoundToInt((Time.time - goalPingTime) * 1000f);
+        }
+        #endregion
+
+        public void Awake() 
 		{
             _startTimer = new System.Diagnostics.Stopwatch();
             _startTimer.Start();
@@ -405,14 +428,14 @@ namespace EQBrowser {
                             }
 
                             opCodes[opcodeConverted](RawData, len, IdChecker1.zoneid == "-1" ? true : false);
-                            packetsLatestSecond++;
-                            packetsTotal++;
+                            PacketsLatestSecond++;
+                            PacketsTotal++;
                         }
                         else
                         {
                             Debug.LogWarningFormat("Unhandled OpCode: {0}", opcodeConverted);
-                            packetsUnhandledType++;
-                            packetsTotal++;
+                            PacketsUnhandledType++;
+                            PacketsTotal++;
                         }
 
                         //if (opcodeDict.ContainsKey(IdChecker1.opcode))

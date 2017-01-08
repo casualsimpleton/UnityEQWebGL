@@ -150,12 +150,13 @@ namespace EQBrowser
 				npcController.isTarget = true;
 				
 				int isDead = npcController._anim_isDead;
-	
-				string targetClean = Regex.Replace(targetName, "[0-9]", "");
-				string targetName2 = Regex.Replace(targetClean, "[_]", " ");
-				string targetName3 = Regex.Replace(targetName2, "[\0]", "");
+
+                string targetClean = Regex.Replace(targetName, "[0-9\0]", "");
+                targetClean = Regex.Replace(targetClean, "[_]", " ");
+				//string targetName2 = Regex.Replace(targetClean, "[_]", " ");
+				//string targetName3 = Regex.Replace(targetName2, "[\0]", "");
 				UIScript.TargetBox.SetActive(true);
-				UIScript.TargetName.text = targetName3;
+                UIScript.TargetName.text = targetClean;
 	
 				if(isDead == 0)
 				{
@@ -751,8 +752,11 @@ namespace EQBrowser
 
 			if(present)
 			{
-                npcController._anim_isDead = 1;
+                //npcController._anim_isDead = 1;
                 npcController.name = string.Format("{0}'s corpse", npcController.name);
+                npcController.AnimDeadNow();
+
+                npcController.UpdateNamePlate();
 			}
 		
 			if(spawnId == OurTargetID)
@@ -765,10 +769,12 @@ namespace EQBrowser
 				if(present)
 				{
                     string targetName = npcController.name;// Player's Name
-					string targetClean = Regex.Replace(targetName, "[0-9]", "");
-					string targetName2 = Regex.Replace(targetClean, "[_]", " ");
-					string targetName3 = Regex.Replace(targetName2, "[\0]", "");
-					ChatText2.text += (Environment.NewLine + "You hit " + targetName3 + " for " + damage + " points of damage.");
+					string targetClean = Regex.Replace(targetName, "[0-9\0]", "");
+                    targetClean = Regex.Replace(targetClean, "[_]", " ");
+					//string targetName2 = Regex.Replace(targetClean, "[_]", " ");
+					//string targetName3 = Regex.Replace(targetName2, "[\0]", "");
+					//ChatText2.text += (Environment.NewLine + "You hit " + targetName3 + " for " + damage + " points of damage.");
+                    ChatText2.text += string.Format("{0}You hit {1} for {2} points of damage.", Environment.NewLine, targetClean, damage);
 
                     int pv = (int)npcController.NPC;
 					
@@ -784,10 +790,13 @@ namespace EQBrowser
                 if (present)
 				{
                     string targetName = npcController.name;// Player's Name
-					string targetClean = Regex.Replace(targetName, "[0-9]", "");
-					string targetName2 = Regex.Replace(targetClean, "[_]", " ");
-					string targetName3 = Regex.Replace(targetName2, "[\0]", "");
-					ChatText2.text += (Environment.NewLine + "<color=#ff0000ff><b>" + targetName3 + " hits" + " YOU for " + damage + " points of damage.</b></color>");
+                    string targetClean = Regex.Replace(targetName, "[0-9\0]", "");
+                    targetClean = Regex.Replace(targetClean, "[_]", " ");
+					//string targetName2 = Regex.Replace(targetClean, "[_]", " ");
+					//string targetName3 = Regex.Replace(targetName2, "[\0]", "");
+					//ChatText2.text += (Environment.NewLine + "<color=#ff0000ff><b>" + targetName3 + " hits" + " YOU for " + damage + " points of damage.</b></color>");
+                    ChatText2.text += string.Format("{0}<color=#ff0000ff><b>{1} hits YOU for {2} points of damage.</b></color>", Environment.NewLine, targetClean, damage);
+                    
                     int pv = (int)npcController.NPC;
 //					if(pv == 0){googleAnalytics.LogEvent("PvP-Death", ourPlayerName, "Victim", 1);googleAnalytics.LogEvent("PvP-Death", targetName3, "Killer", 1);}
 //					if(pv == 1){googleAnalytics.LogEvent("PvE-Death", ourPlayerName, "Victim", 1);googleAnalytics.LogEvent("PvE-Death", targetName3, "Killer", 1);}
@@ -865,21 +874,25 @@ namespace EQBrowser
                 if(present)
 				{
 					string sourceName = npcController.name;// Player's Name
-					string sourceClean = Regex.Replace(sourceName, "[0-9]", "");
-					string sourceName2 = Regex.Replace(sourceClean, "[_]", " ");
-					string sourceName3 = Regex.Replace(sourceName2, "[\0]", "");
+                    string sourceClean = Regex.Replace(sourceName, "[0-9\0]", "");
+                    sourceClean = Regex.Replace(sourceClean, "[_]", " ");
+					//string sourceName2 = Regex.Replace(sourceClean, "[_]", " ");
+					//string sourceName3 = Regex.Replace(sourceName2, "[\0]", "");
 
 					switch(type)
 					{
 						case 4:
-							ChatText2.text += (Environment.NewLine + "<color=#ff0000ff><b>" + sourceName3 + " hits" + " YOU for " + damage + " points of damage.</b></color>");
+							//ChatText2.text += (Environment.NewLine + "<color=#ff0000ff><b>" + sourceName3 + " hits" + " YOU for " + damage + " points of damage.</b></color>");
+                            ChatText2.text += string.Format("{0}<color=#ff0000ff><b>{1} hits YOU for {2} points of damage.</b></color>", Environment.NewLine, sourceClean, damage);
 							break;
 						case 30:
-							ChatText2.text += (Environment.NewLine + "<color=#ff0000ff><b>" + sourceName3 + " kicks" + " YOU for " + damage + " points of damage.</b></color>");
+							//ChatText2.text += (Environment.NewLine + "<color=#ff0000ff><b>" + sourceName3 + " kicks" + " YOU for " + damage + " points of damage.</b></color>");
+                            ChatText2.text += string.Format("{0}<color=#ff0000ff><b>{1} kicks YOU for {2} points of damage.</b></color>", Environment.NewLine, sourceClean, damage);
 							break;
 	
 						default:
-							ChatText2.text += (Environment.NewLine + "<color=#ff0000ff><b>" + sourceName3 + " " + type + " YOU for " + damage + " points of damage.</b></color>");
+							//ChatText2.text += (Environment.NewLine + "<color=#ff0000ff><b>" + sourceName3 + " " + type + " YOU for " + damage + " points of damage.</b></color>");
+                            ChatText2.text += string.Format("{0}<color=#ff0000ff><b>{1} {3} YOU for {2} points of damage.</b></color>", Environment.NewLine, sourceClean, damage, type);
 							break;
 					}
 				}
@@ -895,18 +908,21 @@ namespace EQBrowser
 				if(present)
 				{
 					string targetName = npcController.name;// Player's Name
-					string targetClean = Regex.Replace(targetName, "[0-9]", "");
-					string targetName2 = Regex.Replace(targetClean, "[_]", " ");
-					string targetName3 = Regex.Replace(targetName2, "[\0]", "");
+                    string targetClean = Regex.Replace(targetName, "[0-9\0]", "");
+                    targetClean = Regex.Replace(targetClean, "[_]", " ");
+					//string targetName2 = Regex.Replace(targetClean, "[_]", " ");
+					//string targetName3 = Regex.Replace(targetName2, "[\0]", "");
 					
 					switch(type)
 					{
 						case 4:
-							ChatText2.text += (Environment.NewLine + "You hit " + targetName3 + " for " + damage + " points of damage.");
+							//ChatText2.text += (Environment.NewLine + "You hit " + targetName3 + " for " + damage + " points of damage.");
+                            ChatText2.text += string.Format("{0}You hit {1} for {2} points of damage.", Environment.NewLine, targetClean, damage);
 							break;
 						default:
 	//						ChatText2.text += (Environment.NewLine + "You " + type + " " + targetName3 + " for " + damage + " points of damage.");
-							ChatText2.text += (Environment.NewLine + "You hit " + targetName3 + " for " + damage + " points of damage.");
+							//ChatText2.text += (Environment.NewLine + "You hit " + targetName3 + " for " + damage + " points of damage.");
+                            ChatText2.text += string.Format("{0}You hit {1} for {2} points of damage.", Environment.NewLine, targetClean, damage);
 							break;
 					}
 				}
@@ -1992,14 +2008,14 @@ namespace EQBrowser
                         {
                             //ObjectPool.Instance.GetObjectForType(true, -x, z, y, spawnId, race, name, heading, deity, size, NPC, curHp, max_hp, level, gender);
                             ObjectPool.Instance.GetObjectByRaceAndGender(race, gender,
-                                -x, y, z, deltaX, deltaY, deltaZ, deltaHeading,
+                                -x, z, y, deltaX, deltaY, deltaZ, deltaHeading,
                                 spawnId, name, heading, deity, size, NPC, curHp, max_hp, level);
                         }
                         else
                         {
                             //ObjectPool.Instance.GetObjectForType(true, -x, z, y, spawnId, race, name, heading, deity, size, NPC, curHp, max_hp, level, gender);
                             ObjectPool.Instance.GetObjectByRaceAndGender(Race.Gnoll, gender,
-                                -x, y, z, deltaX, deltaY, deltaZ, deltaHeading,
+                                -x, z, y, deltaX, deltaY, deltaZ, deltaHeading,
                                 spawnId, name, heading, deity, size, NPC, curHp, max_hp, level);
                         }
                         break;
@@ -2012,14 +2028,14 @@ namespace EQBrowser
                     case Race.Gnoll:
                     case Race.Skeleton:
                         ObjectPool.Instance.GetObjectByRaceAndGender(race, gender,
-                                -x, y, z, deltaX, deltaY, deltaZ, deltaHeading,
+                                -x, z, y, deltaX, deltaY, deltaZ, deltaHeading,
                                 spawnId, name, heading, deity, size, NPC, curHp, max_hp, level);
                         break;
 
                     default:
                         Debug.LogWarningFormat("Unhandled race {0} spawn type, spawnID: {1} name: {2} pos: {3},{4},{5}. Using default.", race, spawnId, name, -x, y, z);
                         ObjectPool.Instance.GetObjectByRaceAndGender(Race.Default, Gender.Male,
-                                -x, y, z, deltaX, deltaY, deltaZ, deltaHeading,
+                                -x, z, y, deltaX, deltaY, deltaZ, deltaHeading,
                                 spawnId, name, heading, deity, size, NPC, curHp, max_hp, level);
                         break;
                 }

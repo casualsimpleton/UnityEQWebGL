@@ -600,6 +600,8 @@ public class ObjectPool : MonoBehaviour
         controller.level = level;// Spawn Level
         controller.gender = gender;// Gender (0=male, 1=female)
 
+        //Set this first otherwise they won't appear in the correct place until they start pathing
+        controller.SetMoveXYZ(x, y, z);
         controller.SetXYZRotDeltaXYZR(x, y, z, h, 0, deltaX, deltaY, deltaZ, deltaH);
         
         _spawnList.Add(spawnID, controller);

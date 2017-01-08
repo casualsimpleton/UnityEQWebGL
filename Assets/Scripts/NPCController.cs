@@ -79,6 +79,7 @@ public class NPCController : MonoBehaviour
 	public Renderer rend;
 	
 	public GameObject NameObject;
+    TextMesh namePlateText;
 	public bool updateHeading;
 	public bool updateDeltas;
 	public bool playerRespawn = false;
@@ -93,6 +94,8 @@ public class NPCController : MonoBehaviour
         _transform = this.transform;
 
         TerrainMask = (1 << LayerMask.NameToLayer("Terrain"));
+
+        namePlateText = NameObject.GetComponent<TextMesh>();
     }
 	
 	void Start()
@@ -108,15 +111,17 @@ public class NPCController : MonoBehaviour
 		rend.material.color = Color.red;
 	}
 
-    void UpdateNamePlate()
+    public void UpdateNamePlate()
     {
         //clean name for overhead name
         targetName = name;
-        string targetClean = Regex.Replace(targetName, "[0-9]", "");
-        string targetName2 = Regex.Replace(targetClean, "[_]", " ");
-        string targetName3 = Regex.Replace(targetName2, "[\0]", "");
+        string targetClean = Regex.Replace(targetName, "[0-9\0]", "");
+        targetClean = Regex.Replace(targetClean, "[_]", " ");
+        //string targetName2 = Regex.Replace(targetClean, "[_]", " ");
+        //string targetName3 = Regex.Replace(targetName2, "[\0]", "");
+        
         //generate name above head				
-        this.NameObject.GetComponent<TextMesh>().text = targetName3;
+        namePlateText.text = targetClean;
     }
 
 	void Update () 
@@ -314,8 +319,8 @@ public class NPCController : MonoBehaviour
                     AnimWalkNow();
                 }
 
-                //Just a guess at the speed - 10 seems to work well
-                step = deltaMag * 10f * Time.deltaTime;
+                //Just a guess at the speed - 10 seems to work well - since we'll be using SimpleMove() we don't want to add Time.deltaTime as it does it internally, along with gravity
+                step = deltaMag * 10f;
 
                 //If it's an NPC and not a player, we're going to path it between its current position and it's goal position
                 if (NPC == NPCType.NPC)
@@ -324,18 +329,18 @@ public class NPCController : MonoBehaviour
                     if (_transform.position.x != movetoX || _transform.position.z != movetoZ)
                     {
                         //controller.Move(deltaF * step);
-                        bool isGrounded = controller.SimpleMove(deltaF * step * 20f);
-                        //if (!isGrounded)
-                        //{
-                        //    Debug.LogFormat("{0} isn't grounded", spawnId);
-                        //}
+                        bool isGrounded = controller.SimpleMove(deltaF * step);
+
+                        //TODO - If not grounded, probably want to show them falling? unless levitation is on
                     }
 
                 }
                 //It's a player, we just use dead reckoning - point them in the direction they were last known, and move them forward at their last known speed
                 else
                 {
-                    controller.Move(deltaF * step);
+                    bool isGrounded = controller.SimpleMove(deltaF * step);
+
+                    //TODO - If not grounded, probably want to show them falling? unless levitation is on
                 }
             }
             else
@@ -397,7 +402,7 @@ public class NPCController : MonoBehaviour
         //Use non alloc raycast to reduce GC impact.
         //We're going to offset the ray origin up a bit since there is a small chance we could have clipped through the ground a smidge
         //TOOD - Consider using half the physical size so the ray comes from the mid point (waist-ish) area
-        int hitCount = Physics.RaycastNonAlloc(_transform.position, Vector3.down, _yRayHits, 10f, TerrainMask);
+        int hitCount = Physics.RaycastNonAlloc(_transform.position + (Vector3.up * 5f), Vector3.down, _yRayHits, 10f, TerrainMask);
 
         if (hitCount > 0)
         {
@@ -509,7 +514,7 @@ public class NPCController : MonoBehaviour
 		_anim_isDead = 1;
 		_anim_isHurt = 0;
 		GetComponent<Animator>().Play("Dead");
-		name = NameObject.GetComponent<TextMesh>().text + "'s corpse";
+        name = namePlateText.text + "'s corpse";
 	}
 
     public void SetMoveXYZ(float X, float Y, float Z)

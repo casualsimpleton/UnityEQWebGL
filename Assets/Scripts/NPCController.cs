@@ -397,7 +397,7 @@ public class NPCController : MonoBehaviour
         //Use non alloc raycast to reduce GC impact.
         //We're going to offset the ray origin up a bit since there is a small chance we could have clipped through the ground a smidge
         //TOOD - Consider using half the physical size so the ray comes from the mid point (waist-ish) area
-        int hitCount = Physics.RaycastNonAlloc(_transform.position, Vector3.down, _yRayHits, size * 0.5f, TerrainMask);
+        int hitCount = Physics.RaycastNonAlloc(_transform.position, Vector3.down, _yRayHits, 10f, TerrainMask);
 
         if (hitCount > 0)
         {

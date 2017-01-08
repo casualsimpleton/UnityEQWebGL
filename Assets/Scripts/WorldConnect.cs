@@ -49,16 +49,17 @@ namespace EQBrowser {
             ////EMU Server sends an alive msg every 10s. We're going to measure the time between them and try to figure out the travel time. Not perfect, but might be helpful
             ////Convert from a decimal into millisec
 
-            if (_numPings < 0)
-            {
-                _firstPingTime = Time.time;
-            }
+            //if (_numPings < 0)
+            //{
+            //    _firstPingTime = Time.time;
+            //}
 
-            _numPings++;
+            //_numPings++;
 
-            float goalPingTime = _firstPingTime + (_numPings * 10f);
+            //float goalPingTime = _firstPingTime + (_numPings * 10f);
 
-            PingTime = Mathf.RoundToInt((Time.time - goalPingTime) * 1000f);
+            //PingTime = Mathf.RoundToInt((Time.time - goalPingTime) * 1000f);
+            PingTime = 0;
         }
         #endregion
 

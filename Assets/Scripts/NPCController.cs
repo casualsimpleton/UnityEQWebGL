@@ -94,12 +94,12 @@ public class NPCController : MonoBehaviour
         _transform = this.transform;
 
         TerrainMask = (1 << LayerMask.NameToLayer("Terrain"));
-
-        namePlateText = NameObject.GetComponent<TextMesh>();
     }
 	
 	void Start()
 	{
+        namePlateText = NameObject.GetComponent<TextMesh>();
+
 		UpdateNamePlate();
 
 		//define character controller
@@ -309,52 +309,142 @@ public class NPCController : MonoBehaviour
 
             Profiler.BeginSample("NPC Movement");
             //Calculate delta magnitude just once since we may use it in multiple areas
-            float deltaMag = deltaF.magnitude;
+            #region Option1
+            //float deltaMag = deltaF.magnitude;
 
-            if (deltaMag != 0f)
+            //if (deltaMag != 0f)
+            //{
+            //    //Check animation state - should be walking if it's not
+            //    if (_anim_isWalk == 0)
+            //    {
+            //        AnimWalkNow();
+            //    }
+
+            //    //Just a guess at the speed - 10 seems to work well - since we'll be using SimpleMove() we don't want to add Time.deltaTime as it does it internally, along with gravity
+            //    step = deltaMag * 10f;
+
+            //    //If it's an NPC and not a player, we're going to path it between its current position and it's goal position
+            //    if (NPC == NPCType.NPC)
+            //    {
+            //        //NPC is not where we want them to be, so keep moving them forward - we're only here because we already checked deltas were not 0, otherwise we want to teleport them probably
+            //        //if (_transform.position.x != movetoX || _transform.position.z != movetoZ)
+            //        if(!EQMath.Overlap_TwoCircles(_transform.position.x, _transform.position.z, 1f, movetoX, movetoZ, 1f))
+            //        {
+            //            //controller.Move(deltaF * step);
+            //            bool isGrounded = controller.SimpleMove(deltaF * step);
+
+            //            //TODO - If not grounded, probably want to show them falling? unless levitation is on
+            //        }
+
+            //    }
+            //    //It's a player, we just use dead reckoning - point them in the direction they were last known, and move them forward at their last known speed
+            //    else
+            //    {
+            //        bool isGrounded = controller.SimpleMove(deltaF * step);
+
+            //        //TODO - If not grounded, probably want to show them falling? unless levitation is on
+            //    }
+            //}
+            //else
+            //{
+            //    if (!EQMath.Overlap_TwoCircles(_transform.position.x, _transform.position.z, 1f, movetoX, movetoZ, 1f))
+            //    {
+            //        _transform.position = new Vector3(movetoX, movetoY, movetoZ);
+            //        CheckYHeight(true);
+            //    }
+
+            //    if (_anim_isIdle == 0)
+            //    {
+            //        AnimIdleNow();
+            //    }
+            //}
+            #endregion
+
+            #region Option 2
+            if (NPC == NPCType.Player)
             {
-                //Check animation state - should be walking if it's not
-                if (_anim_isWalk == 0)
-                {
-                    AnimWalkNow();
-                }
+                float deltaMag = deltaF.magnitude;
 
-                //Just a guess at the speed - 10 seems to work well - since we'll be using SimpleMove() we don't want to add Time.deltaTime as it does it internally, along with gravity
-                step = deltaMag * 10f;
-
-                //If it's an NPC and not a player, we're going to path it between its current position and it's goal position
-                if (NPC == NPCType.NPC)
+                //They're moving
+                if (deltaMag != 0)
                 {
-                    //NPC is not where we want them to be, so keep moving them forward - we're only here because we already checked deltas were not 0, otherwise we want to teleport them probably
-                    if (_transform.position.x != movetoX || _transform.position.z != movetoZ)
+                    if (_anim_isWalk == 0)
                     {
-                        //controller.Move(deltaF * step);
-                        bool isGrounded = controller.SimpleMove(deltaF * step);
-
-                        //TODO - If not grounded, probably want to show them falling? unless levitation is on
+                        AnimWalkNow();
                     }
 
-                }
-                //It's a player, we just use dead reckoning - point them in the direction they were last known, and move them forward at their last known speed
-                else
-                {
+                    //Just a guess at the speed - 10 seems to work well - since we'll be using SimpleMove() we don't want to add Time.deltaTime as it does it internally, along with gravity
+                    step = deltaMag * 10f;
+
+                    //This a player, we're just going to shoot them off on dead reckoning
                     bool isGrounded = controller.SimpleMove(deltaF * step);
 
                     //TODO - If not grounded, probably want to show them falling? unless levitation is on
                 }
+                else
+                {
+                    if (_anim_isIdle == 0)
+                    {
+                        CheckYHeight(true);
+                        AnimIdleNow();
+                    }
+                }
+
+                Debug.DrawLine(_transform.position, deltaF * Time.deltaTime, Color.blue);
             }
             else
             {
-                if (_anim_isIdle == 0)
+                //They aren't where they're suppose to be, so keep moving
+                if (!EQMath.Overlap_TwoCircles(_transform.position.x, _transform.position.z, 1f, movetoX, movetoZ, 1f))
                 {
-                    AnimIdleNow();
+                    if (_anim_isWalk == 0)
+                    {
+                        AnimWalkNow();
+                    }
+
+                    float deltaMag = deltaF.magnitude;
+
+                    //We know they're coming to a stand still at the end, however they still aren't on their target position, so we'll use the last known delta pos
+                    //to get us there
+                    if (deltaMag == 0f)
+                    {
+                        deltaF.x = _prevDeltaX;
+                        deltaF.y = _prevDeltaY;
+                        deltaF.z = _prevDeltaZ;
+                        deltaMag = deltaF.magnitude;
+                    }
+
+                    //Just a guess at the speed - 10 seems to work well - since we'll be using SimpleMove() we don't want to add Time.deltaTime as it does it internally, along with gravity
+                    step = deltaMag * 10f;
+
+                    bool isGrounded = controller.SimpleMove(deltaF * step);
+
+                    Debug.DrawLine(_transform.position, _transform.position + deltaF, Color.gray);
+                    Debug.DrawLine(_transform.position, new Vector3(movetoX, movetoY, movetoZ), Color.red);
+
+                    //TODO - If not grounded, probably want to show them falling? unless levitation is on
                 }
+                else
+                {
+                    if (_anim_isIdle == 0)
+                    {
+                        CheckYHeight(true);
+                        AnimIdleNow();
+                    }
+
+                    Debug.DrawLine(_transform.position, new Vector3(movetoX, movetoY, movetoZ), Color.green);
+                }
+
+                
             }
+
+            
+            #endregion
             Profiler.EndSample();
 
             //CheckYHeight(updateDeltas);
 
-            Debug.DrawLine(_transform.position, new Vector3(movetoX, movetoY, movetoZ), Color.green);
+            
 
 
 
@@ -553,11 +643,16 @@ public class NPCController : MonoBehaviour
     private Vector3 _prevMovePos = new Vector3(0, 0, 0);
     private Vector3 _newMovePos = new Vector3(0, 0, 0);
 
+    
+#endif
+
     float _prevMoveX;
     float _prevMoveY;
     float _prevMoveZ;
     float _prevMoveH;
-#endif
+    float _prevDeltaX;
+    float _prevDeltaY;
+    float _prevDeltaZ;
 
     public void SetXYZRotDeltaXYZR(float newX, float newY, float newZ, float newH, int animSpeed, float dX, float dY, float dZ, float dH)
     {
@@ -572,15 +667,12 @@ public class NPCController : MonoBehaviour
 
             DebugMovementHelper();
         }
+#endif
 
         _prevMoveX = movetoX;
         _prevMoveY = movetoY;
         _prevMoveZ = movetoZ;
         _prevMoveH = movetoH;
-#endif
-
-        _transform.position = new Vector3(movetoX, movetoY, movetoZ);
-        CheckYHeight(true);
 
         movetoX = newX;
         movetoY = newY;
@@ -598,17 +690,24 @@ public class NPCController : MonoBehaviour
 
         if (deltaX != dX || deltaY != dY || deltaZ != dZ)
         {
+            _prevDeltaX = deltaX;
+            _prevDeltaY = deltaY;
+            _prevDeltaZ = deltaZ;
+
             deltaX = dX;
             deltaY = dY;
             deltaZ = dZ;
             updateDeltas = true;
         }
 
+        Vector3 deltaPos = new Vector3(deltaX, deltaY, deltaZ);
+        //Move us to where the server says we started
+        //We're going to assume there's some latency and shift them forward that much
+        _transform.position = (new Vector3(_prevMoveX, _prevMoveY, _prevMoveZ) + (deltaPos * 10f * (Time.fixedDeltaTime * 20)));
+        CheckYHeight(true);
+
         deltaH = dH;
         clientUpdate = true;
-
-        _rayFrameCount = 0;
-        //CheckYHeight(true);
     }
 
 #if UNITY_EDITOR

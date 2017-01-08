@@ -23,7 +23,7 @@ public class NPCController : MonoBehaviour
         NPC_Corpse = 3
     }
 
-	public int RaceID = 0;
+	public EQBrowser.Race RaceID = Race.Human;
 	public int spawnId = 0;
 	public int corpseId = 0;
 	public string name = "";// Player's Name
@@ -67,7 +67,7 @@ public class NPCController : MonoBehaviour
 	public byte curHp = 0;// Current hp %%% wrong
 	public int maxHp = 0;// Current hp %%% wrong
 	public byte level = 0;// Spawn Level
-	public byte gender = 0;// Gender (0=male, 1=female)
+	public EQBrowser.Gender gender = Gender.Male;// Gender (0=male, 1=female)
 	public int animationState;//animation
 	public CharacterController controller;
     public Transform _transform;
@@ -361,18 +361,18 @@ public class NPCController : MonoBehaviour
     public void CheckYHeight(bool forceCheck = false)
     {
         //Do this every 2 frames to offset some of the cost, or skip if we're not moving
-        _rayFrameCount++;
-        if (_rayFrameCount < 2 || forceCheck)
-        {
-            return;
-        }
+        //_rayFrameCount++;
+        //if (_rayFrameCount < 2 || forceCheck)
+        //{
+        //    return;
+        //}
 
-        _rayFrameCount = 0;
+        //_rayFrameCount = 0;
 
         //Use non alloc raycast to reduce GC impact.
         //We're going to offset the ray origin up a bit since there is a small chance we could have clipped through the ground a smidge
         //TOOD - Consider using half the physical size so the ray comes from the mid point (waist-ish) area
-        int hitCount = Physics.RaycastNonAlloc(_transform.position + (Vector3.up * 1), Vector3.down, _yRayHits, 200f, TerrainMask);
+        int hitCount = Physics.RaycastNonAlloc(_transform.position, Vector3.down, _yRayHits, 200f, TerrainMask);
 
         if (hitCount > 0)
         {

@@ -13,42 +13,6 @@ namespace EQBrowser
     /// </summary>
     public enum OpCode : short
     {
-        //SendCharInfo = 423,
-        //ApproveName = 36,
-        //ZoneUnavailable = 548,
-        //ZoneServerInfo = 545,
-        //PlayerProfile = 365,
-        //NewZone = 338,
-        //ZoneServerReady = 546,
-        //EmuKeepAlive = 550,
-        //EmuRequestClose = 551,
-        //LogOutReply = 296,
-        //SendExpZoneIn = 424,
-        //ZoneSpawns = 547,
-        //NewSpawns = 336,
-        //ZoneChange = 539,
-        //Deletespawn = 116,
-        //ChannelMessage = 69,
-        //ClientUpdate = 87,
-        //SimpleMessage = 458,
-        //FormattedMessage = 168,
-        //Damage = 109,
-        //HPUpdate = 242,
-        //ZoneentryInfo = 541,
-        //PlayerStateAdd = 366,
-        //PlayerStateRemove = 367,
-        //MobHealth = 323,
-        //ExpUpdate = 154,
-        //Death = 110,
-        //SpawnAppearence = 465,
-        //BecomeCorpse = 52,
-        //ZonePlayerToBind = 544,
-        //ItemPacket = 257,
-        //MoneyOnCorpse = 327,
-        //WorldMOTD = 329,
-        //CharInventory = 72,
-        //EnterWorld = 151
-
         //System Use
         OP_ExploreUnknown = 1,
 

@@ -1810,7 +1810,8 @@ namespace EQBrowser
 				string suffix = ReadFixedLengthString(data, ref position, 32);// Player's suffix (of Veeshan, etc.)
 				Int32 petOwnerId = ReadInt32(data, ref position);// If this is a pet, the spawn id of owner
 				byte guildrank = ReadInt8(data, ref position);// 0=normal, 1=officer, 2=leader
-				int j = 0;
+				
+                int j = 0;
 				for(j = 0; j < 5; j++)
 				{
 					Int32 material = ReadInt32(data, ref position);// Equipment visuals
@@ -1824,6 +1825,7 @@ namespace EQBrowser
 					Int32 material32 = ReadInt32(data, ref position);// Equipment visuals
 					Int32 material42 = ReadInt32(data, ref position);// Equipment visuals
 				}
+
 				float runspeed = BitConverter.ToSingle(BitConverter.GetBytes(ReadInt32(data, ref position)), 0);// Speed when running
 				byte invis = ReadInt8(data, ref position);// Invis (0=not, 1=invis)
 				byte afk = ReadInt8(data, ref position);// 0=no, 1=afk
@@ -1831,7 +1833,8 @@ namespace EQBrowser
 				string title = ReadFixedLengthString(data, ref position, 32);// Title
 				string suffix3 = ReadFixedLengthString(data, ref position, 8);// Player's suffix (of Veeshan, etc.)
 				byte helm = ReadInt8(data, ref position);// Helm texture
-				Int32 race = ReadInt32(data, ref position);// Spawn race
+				//Int32 race = ReadInt32(data, ref position);// Spawn race
+                EQBrowser.Race race = (Race)ReadInt32(data, ref position); //Spawn race
 				string lastName = ReadFixedLengthString(data, ref position, 32);// Player's Lastname
 				float walkspeed = BitConverter.ToSingle(BitConverter.GetBytes(ReadInt32(data, ref position)), 0);// Speed when walking
 				byte is_pet = ReadInt8(data, ref position);// 0=no, 1=yes
@@ -1861,6 +1864,7 @@ namespace EQBrowser
 					
 					
 				}
+
 				byte lfg = ReadInt8(data, ref position);// 0=off, 1=lfg on
 				byte gm = ReadInt8(data, ref position);// 0=no, 1=gm
 				byte aatitle = ReadInt8(data, ref position);// 0=none, 1=general, 2=archtype, 3=class
@@ -1885,40 +1889,92 @@ namespace EQBrowser
 				byte DestructibleUnk8 = ReadInt8(data, ref position);
 				Int32 DestructibleUnk9 = ReadInt32(data, ref position);
 				byte targetable_with_hotkey = ReadInt8(data, ref position);
+                
+//                switch (race)
+//                {
+//                    case 1:
+//                        if(NPC == 0)
+//                        {
+//                            ObjectPool.instance.GetObjectForType("elf",true,-x,z,y,spawnId,race,name,heading,deity,size,NPC,curHp,max_hp,level,gender);
+//                        }
+//                        else
+//                        {
+//                            ObjectPool.instance.GetObjectForType("GnollPrefab",true,-x,z,y,spawnId,race,name,heading,deity,size,NPC,curHp,max_hp,level,gender);
+//                        }
+//                        break;
 
-				switch (race)
-				{
-					case 1:
-						if(NPC == 0){ObjectPool.instance.GetObjectForType("elf",true,-x,z,y,spawnId,race,name,heading,deity,size,NPC,curHp,max_hp,level,gender);}
-						else{ObjectPool.instance.GetObjectForType("GnollPrefab",true,-x,z,y,spawnId,race,name,heading,deity,size,NPC,curHp,max_hp,level,gender);}
-						break;
-					case 22:
-						ObjectPool.instance.GetObjectForType("BeetlePrefab",true,-x,z,y,spawnId,race,name,heading,deity,size,NPC,curHp,max_hp,level,gender);
-						break;
-					case 34:
-						ObjectPool.instance.GetObjectForType("BatPrefab",true,-x,z,y,spawnId,race,name,heading,deity,size,NPC,curHp,max_hp,level,gender);
-						break;						
-					case 36:
-						ObjectPool.instance.GetObjectForType("RatPrefab",true,-x,z,y,spawnId,race,name,heading,deity,size,NPC,curHp,max_hp,level,gender);
-//						ObjectPool.instance.GetObjectForType("SkeletonPrefab",true,-x,z,y,spawnId,race,name,heading,deity,size,NPC,curHp,max_hp,level,gender);						
-						break;
-					case 37:
-						ObjectPool.instance.GetObjectForType("SnakePrefab",true,-x,z,y,spawnId,race,name,heading,deity,size,NPC,curHp,max_hp,level,gender);
-//						ObjectPool.instance.GetObjectForType("SkeletonPrefab",true,-x,z,y,spawnId,race,name,heading,deity,size,NPC,curHp,max_hp,level,gender);						
-						break;							
-					case 38:
-						ObjectPool.instance.GetObjectForType("SpiderPrefab",true,-x,z,y,spawnId,race,name,heading,deity,size,NPC,curHp,max_hp,level,gender);
-						break;
-					case 39:
-						ObjectPool.instance.GetObjectForType("GnollPrefab",true,-x,z,y,spawnId,race,name,heading,deity,size,NPC,curHp,max_hp,level,gender);
-						break;
-					case 60:
-						ObjectPool.instance.GetObjectForType("SkeletonPrefab",true,-x,z,y,spawnId,race,name,heading,deity,size,NPC,curHp,max_hp,level,gender);
-						break;
-					default:
-						ObjectPool.instance.GetObjectForType("GnollPrefab",true,-x,z,y,spawnId,race,name,heading,deity,size,NPC,curHp,max_hp,level,gender);
-						break;
-				}
+//                    case 22:
+//                        ObjectPool.instance.GetObjectForType("BeetlePrefab",true,-x,z,y,spawnId,race,name,heading,deity,size,NPC,curHp,max_hp,level,gender);
+//                        break;
+
+//                    case 34:
+//                        ObjectPool.instance.GetObjectForType("BatPrefab",true,-x,z,y,spawnId,race,name,heading,deity,size,NPC,curHp,max_hp,level,gender);
+//                        break;	
+					
+//                    case 36:
+//                        ObjectPool.instance.GetObjectForType("RatPrefab",true,-x,z,y,spawnId,race,name,heading,deity,size,NPC,curHp,max_hp,level,gender);
+////						ObjectPool.instance.GetObjectForType("SkeletonPrefab",true,-x,z,y,spawnId,race,name,heading,deity,size,NPC,curHp,max_hp,level,gender);						
+//                        break;
+
+//                    case 37:
+//                        ObjectPool.instance.GetObjectForType("SnakePrefab",true,-x,z,y,spawnId,race,name,heading,deity,size,NPC,curHp,max_hp,level,gender);
+////						ObjectPool.instance.GetObjectForType("SkeletonPrefab",true,-x,z,y,spawnId,race,name,heading,deity,size,NPC,curHp,max_hp,level,gender);						
+//                        break;	
+						
+//                    case 38:
+//                        ObjectPool.instance.GetObjectForType("SpiderPrefab",true,-x,z,y,spawnId,race,name,heading,deity,size,NPC,curHp,max_hp,level,gender);
+//                        break;
+
+//                    case 39:
+//                        ObjectPool.instance.GetObjectForType("GnollPrefab",true,-x,z,y,spawnId,race,name,heading,deity,size,NPC,curHp,max_hp,level,gender);
+//                        break;
+
+//                    case 60:
+//                        ObjectPool.instance.GetObjectForType("SkeletonPrefab",true,-x,z,y,spawnId,race,name,heading,deity,size,NPC,curHp,max_hp,level,gender);
+//                        break;
+
+//                    default:
+//                        ObjectPool.instance.GetObjectForType("GnollPrefab",true,-x,z,y,spawnId,race,name,heading,deity,size,NPC,curHp,max_hp,level,gender);
+//                        break;
+//                }
+
+                switch (race)
+                {
+                    case Race.Human:
+                        if (NPC == 0)
+                        {
+                            ObjectPool.instance.GetObjectForType(true, -x, z, y, spawnId, race, name, heading, deity, size, NPC, curHp, max_hp, level, gender);
+                        }
+                        else
+                        {
+                            ObjectPool.instance.GetObjectForType(true, -x, z, y, spawnId, race, name, heading, deity, size, NPC, curHp, max_hp, level, gender);
+                        }
+                        break;
+
+                    case Race.Beetle:
+                        break;
+
+                    case Race.GiantBat:
+                        break;
+
+                    case Race.GiantRat:
+                        break;
+
+                    case Race.GiantSnake:
+                        break;
+
+                    case Race.GiantSpider:
+                        break;
+
+                    case Race.Gnoll:
+                        break;
+
+                    case Race.Skeleton:
+                        break;
+
+                    default:
+                        break;
+                }
 			}
 		}
 //end		

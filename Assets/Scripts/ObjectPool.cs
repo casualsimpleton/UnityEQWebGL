@@ -20,10 +20,16 @@ public class ObjectPool : MonoBehaviour
     public class ObjectPoolEntry
     {
         /// <summary>
-        /// the object to pre instantiate
+        /// The race this model represents
         /// </summary>
         [SerializeField]
-        public GameObject Prefab;
+        public EQBrowser.Race Race;
+
+        /// <summary>
+        /// the object to pre instantiate - they should be arranged in gender. index 0 = male, 1 = female, 2 = it/genderless
+        /// </summary>
+        [SerializeField]
+        public GameObject[] Prefab;
 
         /// <summary>
         /// quantity of object to pre-instantiate
@@ -38,6 +44,8 @@ public class ObjectPool : MonoBehaviour
     /// by The amount of objects of each type to buffer.
     /// </summary>
     public ObjectPoolEntry[] Entries;
+
+    public Dictionary<EQBrowser.Race, ObjectPoolEntry> _pool;
 
     /// <summary>
     /// The pooled objects currently available.
@@ -61,6 +69,7 @@ public class ObjectPool : MonoBehaviour
 
         DontDestroyOnLoad(transform.gameObject);
     }
+
     void OnEnable()
     {
         instance = this;
@@ -114,9 +123,60 @@ public class ObjectPool : MonoBehaviour
     /// <param name='onlyPooled'>
     /// If true, it will only return an object if there is one currently pooled.
     /// </param>
-    public GameObject GetObjectForType(string objectType, bool onlyPooled, float x, float y, float z, int spawnId, int race, string name, float heading, int deity, float size, byte NPC, byte curHp, byte maxHp, byte level, byte gender)
+    public GameObject GetObjectForType(string objectType, bool onlyPooled, float x, float y, float z, int spawnId, EQBrowser.Race race, string name, float heading, int deity, float size, byte NPC, byte curHp, byte maxHp, byte level, EQBrowser.Gender gender)
     {
+        for (int i = 0; i < Entries.Length; i++)
+        {
+            var prefab = Entries[i].Prefab;
 
+            if (prefab.name != objectType)
+                continue;
+
+            if (Pool[i].Count > 0)
+            {
+                GameObject pooledObject = Pool[i][0];
+                Pool[i].RemoveAt(0);
+                pooledObject.transform.parent = null;
+                pooledObject.SetActiveRecursively(true);
+                Vector3 pos = new Vector3(x, y, z);
+                pooledObject.transform.position = pos;
+                //heading
+                float h = Mathf.Lerp(360, 0, heading / 255f);
+                //					pooledObject.transform.eulerAngles.y = h;
+                pooledObject.transform.localEulerAngles = new Vector3(0, h, 0);
+                if (NPC == 0) { size = 1.4f; pooledObject.transform.localScale = new Vector3(size, size, size); }
+                if (NPC == 1) { pooledObject.transform.localScale = new Vector3((size / 4f), (size / 4f), (size / 4f)); }
+                pooledObject.name = spawnId.ToString();
+
+                NPCController controller = pooledObject.GetComponent<NPCController>();
+
+                controller.RaceID = race;
+                controller.spawnId = spawnId;
+                controller.name = name;// Player's Name
+                controller.prefabName = prefab.name;
+                controller.x = x;// x coord
+                controller.y = y;// y coord
+                controller.z = z;// z coord
+                controller.heading = heading;// heading
+                controller.deity = deity;// Player's Deity
+                controller.size = size;// Model size
+                controller.NPC = (NPCController.NPCType)NPC;// 0=player,1=npc,2=pc corpse,3=npc corpse,a
+                controller.curHp = curHp;// Current hp %%% wrong
+                controller.maxHp = maxHp;// Current hp %%% wrong
+                controller.level = level;// Spawn Level
+                controller.gender = gender;// Gender (0=male, 1=female)
+                spawnlist.Add(pooledObject);
+
+                return pooledObject;
+            }
+        }
+
+        //If we have gotten here either there was no object of the specified type or non were left in the pool with onlyPooled set to true
+        return null;
+    }
+
+    public GameObject GetObjectForType(bool onlyPooled, float x, float y, float z, int spawnId, EQBrowser.Race race, string name, float heading, int deity, float size, byte NPC, byte curHp, byte maxHp, byte level, EQBrowser.Gender gender)
+    {
         for (int i = 0; i < Entries.Length; i++)
         {
             var prefab = Entries[i].Prefab;

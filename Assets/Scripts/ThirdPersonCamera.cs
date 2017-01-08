@@ -127,21 +127,38 @@ public class ThirdPersonCamera : MonoBehaviour
 			{
 				if ((!EventSystem.current.IsPointerOverGameObject()) && (hit.collider.tag=="Targetable"))
 				{
+                    NPCController targetController = hit.transform.root.GetComponentInChildren<NPCController>();
+                    int targetUID = -1;
 
-					string target = hit.transform.root.name;
-					GameObject temp = ObjectPool.instance.spawnlist.Where(obj => obj.name == target).SingleOrDefault();
-					if(temp != null)
-					{
-						if(temp.GetComponent<NPCController>()._anim_isDead == 1 && WorldConnection.OurTargetLootID == 0)
-						{
-							Debug.Log("ISDEADLOOT");
-							WorldConnection.DoLoot(target);
-						}
-						else
-						{
-							Debug.Log("ISNOTDEADCONSIDER");
-						}
-					}
+                    if(targetController != null)
+                    {
+                        if (targetController._anim_isDead == 1 && WorldConnection.OurTargetLootID == 0)
+                        {
+                            Debug.Log("ISDEADLOOT");
+                            WorldConnection.DoLoot(targetController.spawnId);
+                        }
+                        else
+                        {
+                            Debug.Log("ISNOTDEADCONSIDER");
+                        }
+
+                    }
+
+                    //string target = hit.transform.root.name;
+                    ////GameObject temp = ObjectPool.Instance.spawnlist.Where(obj => obj.name == target).SingleOrDefault();
+                    
+                    //if(temp != null)
+                    //{
+                    //    if(temp.GetComponent<NPCController>()._anim_isDead == 1 && WorldConnection.OurTargetLootID == 0)
+                    //    {
+                    //        Debug.Log("ISDEADLOOT");
+                    //        WorldConnection.DoLoot(target);
+                    //    }
+                    //    else
+                    //    {
+                    //        Debug.Log("ISNOTDEADCONSIDER");
+                    //    }
+                    //}
 				}
 			}
 		}

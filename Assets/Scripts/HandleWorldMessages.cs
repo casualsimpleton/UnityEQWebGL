@@ -121,12 +121,15 @@ namespace EQBrowser
 		
 		public void DoTarget(string targetID)
 		{
-			
+            NPCController npcController;
+
 //			int OurTargetInt = int.Parse(OurTargetID);
 			if(OurTargetID > 0)
 			{
-				GameObject temp2 = ObjectPool.instance.spawnlist.FirstOrDefault(obj => obj.name == OurTargetID.ToString()); 
-				temp2.GetComponent<NPCController>().isTarget = false;
+                //GameObject temp2 = ObjectPool.Instance.spawnlist.FirstOrDefault(obj => obj.name == OurTargetID.ToString()); 
+                //temp2.GetComponent<NPCController>().isTarget = false;
+                ObjectPool.Instance.GetSpawn(OurTargetID, out npcController);
+                npcController.isTarget = false;
 			}
 
 			Debug.Log("targetID: " + targetID);
@@ -134,16 +137,19 @@ namespace EQBrowser
 			OurTargetID = targetInt;
 				
 //			GameObject temp = ObjectPool.instance.spawnlist.Where(obj => obj.name == targetID).SingleOrDefault();
-			GameObject temp = ObjectPool.instance.spawnlist.FirstOrDefault(obj => obj.name == targetID); 
-			if(temp != null)
+			//GameObject temp = ObjectPool.Instance.spawnlist.FirstOrDefault(obj => obj.name == targetID); 
+
+            bool present = ObjectPool.Instance.GetSpawn(OurTargetID, out npcController);
+
+            if (present)
 			{
-				string targetName = temp.GetComponent<NPCController>().name;
-				int curhp = temp.GetComponent<NPCController>().curHp;
-				int maxhp = temp.GetComponent<NPCController>().maxHp;
+                string targetName = npcController.name;
+				int curhp = npcController.curHp;
+				int maxhp = npcController.maxHp;
 				
-				temp.GetComponent<NPCController>().isTarget = true;
+				npcController.isTarget = true;
 				
-				int isDead = temp.GetComponent<NPCController>()._anim_isDead;
+				int isDead = npcController._anim_isDead;
 	
 				string targetClean = Regex.Replace(targetName, "[0-9]", "");
 				string targetName2 = Regex.Replace(targetClean, "[_]", " ");
@@ -175,9 +181,9 @@ namespace EQBrowser
 
 //work in progress		
 	
-		public void DoLoot(string targetID)
+		public void DoLoot(int targetID)
 		{
-			OurTargetLootID = int.Parse(targetID);
+            OurTargetLootID = targetID;
 			byte[] DoLootRequest = new byte[4];
 			Int32 position = 0;
 			WriteInt32(OurTargetLootID, ref DoLootRequest, ref position);
@@ -739,14 +745,15 @@ namespace EQBrowser
 			Int32 damage = ReadInt32(data, ref position);
 			
 //			GameObject temp = ObjectPool.instance.spawnlist.Where(obj => obj.name == spawnId.ToString()).SingleOrDefault();
-			GameObject temp = ObjectPool.instance.spawnlist.FirstOrDefault(obj => obj.name == spawnId.ToString());
+			//GameObject temp = ObjectPool.Instance.spawnlist.FirstOrDefault(obj => obj.name == spawnId.ToString());
+            NPCController npcController;
+            bool present = ObjectPool.Instance.GetSpawn(spawnId, out npcController);
 
-			if(temp != null)
+			if(present)
 			{
-				temp.GetComponent<NPCController>()._anim_isDead = 1;
-				temp.GetComponent<NPCController>().name = temp.GetComponent<NPCController>().name + "'s corpse";
+                npcController._anim_isDead = 1;
+                npcController.name = string.Format("{0}'s corpse", npcController.name);
 			}
-
 		
 			if(spawnId == OurTargetID)
 			{
@@ -755,15 +762,15 @@ namespace EQBrowser
 			}
 			if(killerId == OurEntityID)
 			{
-				if(temp != null)
+				if(present)
 				{
-					string targetName = temp.GetComponent<NPCController>().name;// Player's Name
+                    string targetName = npcController.name;// Player's Name
 					string targetClean = Regex.Replace(targetName, "[0-9]", "");
 					string targetName2 = Regex.Replace(targetClean, "[_]", " ");
 					string targetName3 = Regex.Replace(targetName2, "[\0]", "");
 					ChatText2.text += (Environment.NewLine + "You hit " + targetName3 + " for " + damage + " points of damage.");
-	
-					int pv = (int)temp.GetComponent<NPCController>().NPC;
+
+                    int pv = (int)npcController.NPC;
 					
 //					if(pv == 0){googleAnalytics.LogEvent("PvP-Death", ourPlayerName, "Killer", 1);googleAnalytics.LogEvent("PvP-Death", targetName3, "Victim", 1);}
 //					if(pv == 1){googleAnalytics.LogEvent("PvE-Death", ourPlayerName, "Killer", 1);googleAnalytics.LogEvent("PvE-Death", targetName3, "Victim", 1);}
@@ -771,15 +778,17 @@ namespace EQBrowser
 			}
 			if(spawnId == OurEntityID)
 			{
-				GameObject temp2 = ObjectPool.instance.spawnlist.FirstOrDefault(obj => obj.name == killerId.ToString());
-				if(temp2 != null)
+				//GameObject temp2 = ObjectPool.Instance.spawnlist.FirstOrDefault(obj => obj.name == killerId.ToString());
+                present = ObjectPool.Instance.GetSpawn(killerId, out npcController);
+
+                if (present)
 				{
-					string targetName = temp2.GetComponent<NPCController>().name;// Player's Name
+                    string targetName = npcController.name;// Player's Name
 					string targetClean = Regex.Replace(targetName, "[0-9]", "");
 					string targetName2 = Regex.Replace(targetClean, "[_]", " ");
 					string targetName3 = Regex.Replace(targetName2, "[\0]", "");
 					ChatText2.text += (Environment.NewLine + "<color=#ff0000ff><b>" + targetName3 + " hits" + " YOU for " + damage + " points of damage.</b></color>");
-					int pv = (int)temp2.GetComponent<NPCController>().NPC;
+                    int pv = (int)npcController.NPC;
 //					if(pv == 0){googleAnalytics.LogEvent("PvP-Death", ourPlayerName, "Victim", 1);googleAnalytics.LogEvent("PvP-Death", targetName3, "Killer", 1);}
 //					if(pv == 1){googleAnalytics.LogEvent("PvE-Death", ourPlayerName, "Victim", 1);googleAnalytics.LogEvent("PvE-Death", targetName3, "Killer", 1);}
 				}
@@ -813,11 +822,19 @@ namespace EQBrowser
 			byte hp = ReadInt8(data, ref position);
 
 //			GameObject temp = ObjectPool.instance.spawnlist.Where(obj => obj.name == spawnId.ToString()).SingleOrDefault();
-			GameObject temp = null;
-			if(isDead == false){temp = ObjectPool.instance.spawnlist.FirstOrDefault(obj => obj.name == spawnId.ToString());}
-			if(temp != null)
+			//GameObject temp = null;
+            bool present = false;
+            NPCController npcController = null;
+
+			if(isDead == false)
+            {
+                //temp = ObjectPool.Instance.spawnlist.FirstOrDefault(obj => obj.name == spawnId.ToString());
+                present = ObjectPool.Instance.GetSpawn(spawnId, out npcController);
+            }
+
+			if(present)
 			{
-				temp.GetComponent<NPCController>().curHp = hp;// Player's Name
+				npcController.curHp = hp;// Player's Name
 				UIScript.TargetHP.sizeDelta = new Vector2( (int)hp, 10);
 				UIScript.TargetHPText.text = ((int)hp + "%");
 			}
@@ -841,10 +858,13 @@ namespace EQBrowser
 			{
 //				GameObject temp = ObjectPool.instance.spawnlist.Where(obj => obj.name == source.ToString()).SingleOrDefault();
 				DoClientUpdate();
-				GameObject temp = ObjectPool.instance.spawnlist.FirstOrDefault(obj => obj.name == source.ToString());
-				if(temp != null)
+				//GameObject temp = ObjectPool.Instance.spawnlist.FirstOrDefault(obj => obj.name == source.ToString());
+                NPCController npcController = null;
+                bool present = ObjectPool.Instance.GetSpawn(source, out npcController);				
+                
+                if(present)
 				{
-					string sourceName = temp.GetComponent<NPCController>().name;// Player's Name
+					string sourceName = npcController.name;// Player's Name
 					string sourceClean = Regex.Replace(sourceName, "[0-9]", "");
 					string sourceName2 = Regex.Replace(sourceClean, "[_]", " ");
 					string sourceName3 = Regex.Replace(sourceName2, "[\0]", "");
@@ -868,10 +888,13 @@ namespace EQBrowser
 			if(source == OurEntityID)
 			{
 //				GameObject temp2 = ObjectPool.instance.spawnlist.Where(obj => obj.name == target.ToString()).SingleOrDefault();
-				GameObject temp2 = ObjectPool.instance.spawnlist.FirstOrDefault(obj => obj.name == target.ToString());
-				if(temp2 != null)
+				//GameObject temp2 = ObjectPool.Instance.spawnlist.FirstOrDefault(obj => obj.name == target.ToString());
+                NPCController npcController = null;
+                bool present = ObjectPool.Instance.GetSpawn(target, out npcController);
+
+				if(present)
 				{
-					string targetName = temp2.GetComponent<NPCController>().name;// Player's Name
+					string targetName = npcController.name;// Player's Name
 					string targetClean = Regex.Replace(targetName, "[0-9]", "");
 					string targetName2 = Regex.Replace(targetClean, "[_]", " ");
 					string targetName3 = Regex.Replace(targetName2, "[\0]", "");
@@ -935,20 +958,22 @@ namespace EQBrowser
         {
 			UIScriptsObject.SetActive(true);
             GameObject temp = null;
-            if (ObjectPool.instance)
+            
+            if (ObjectPool.Instance)
             {
-                if (ObjectPool.instance.spawnlist.Count != 0)
-                {
-					while (ObjectPool.instance.spawnlist.Count != 0)
-					{
-					    temp = ObjectPool.instance.spawnlist.First();
-					    string PrefabName = temp.GetComponent<NPCController>().prefabName;
-						
-					    temp.name = PrefabName;
-					    ObjectPool.instance.PoolObject(temp);
-					    ObjectPool.instance.spawnlist.Remove(temp);
-					}
-                }
+                //if (ObjectPool.Instance.spawnlist.Count != 0)
+                //{
+                //    while (ObjectPool.instance.spawnlist.Count != 0)
+                //    {
+                //        temp = ObjectPool.instance.spawnlist.First();
+                //        string PrefabName = temp.GetComponent<NPCController>().prefabName;
+
+                //        temp.name = PrefabName;
+                //        ObjectPool.instance.PoolObject(temp);
+                //        ObjectPool.instance.spawnlist.Remove(temp);
+                //    }
+                //}
+                ObjectPool.Instance.ReturnSpawnsToPool();
             }
 
             switch (zoneID)
@@ -983,44 +1008,46 @@ namespace EQBrowser
 			DoTarget("0");
 			UIScriptsObject.SetActive(false);
             GameObject temp = null;
-            if (ObjectPool.instance)
+            if (ObjectPool.Instance)
             {
-                if (ObjectPool.instance.spawnlist.Count != 0)
-                {
-					while (ObjectPool.instance.spawnlist.Count != 0)
-					{
-					    temp = ObjectPool.instance.spawnlist.First();
-					    string PrefabName = temp.GetComponent<NPCController>().prefabName;
-					    temp.name = PrefabName;
+                //if (ObjectPool.instance.spawnlist.Count != 0)
+                //{
+                //    while (ObjectPool.instance.spawnlist.Count != 0)
+                //    {
+                //        temp = ObjectPool.instance.spawnlist.First();
+                //        string PrefabName = temp.GetComponent<NPCController>().prefabName;
+                //        temp.name = PrefabName;
 
-                        NPCController controller = temp.GetComponent<NPCController>();
+                //        NPCController controller = temp.GetComponent<NPCController>();
 
-						controller.updateHeading = false;
-						controller.name = "";
-						controller.targetName = "";
-						controller.updateDeltas = false;
-						controller.clientUpdate = false;
-						controller.isTarget = false;
-						controller._anim_isDead = 0;
-						controller.playerRespawn = false;
-						controller.movetoX = 0;
-						controller.movetoY = 0;
-						controller.movetoZ = 0;
-						controller.movetoH = 0;
-						controller.deltaX = 0;
-						controller.deltaY = 0;
-						controller.deltaZ = 0;
-						controller.curHp = 0;
-						controller.maxHp = 0;
-                        controller.NPC = NPCController.NPCType.Player;
-						controller.animationspeed = 0;
-						controller.animationState = 0;
-						controller.deltaF = new Vector3(0,0,0);
-						controller.targetPosition = new Vector3(0,0,0);
-					    ObjectPool.instance.PoolObject(temp);
-					    ObjectPool.instance.spawnlist.Remove(temp);
-					}
-                }
+                //        controller.updateHeading = false;
+                //        controller.name = "";
+                //        controller.targetName = "";
+                //        controller.updateDeltas = false;
+                //        controller.clientUpdate = false;
+                //        controller.isTarget = false;
+                //        controller._anim_isDead = 0;
+                //        controller.playerRespawn = false;
+                //        controller.movetoX = 0;
+                //        controller.movetoY = 0;
+                //        controller.movetoZ = 0;
+                //        controller.movetoH = 0;
+                //        controller.deltaX = 0;
+                //        controller.deltaY = 0;
+                //        controller.deltaZ = 0;
+                //        controller.curHp = 0;
+                //        controller.maxHp = 0;
+                //        controller.NPC = NPCController.NPCType.Player;
+                //        controller.animationspeed = 0;
+                //        controller.animationState = 0;
+                //        controller.deltaF = new Vector3(0,0,0);
+                //        controller.targetPosition = new Vector3(0,0,0);
+                //        ObjectPool.instance.PoolObject(temp);
+                //        ObjectPool.instance.spawnlist.Remove(temp);
+                //    }
+                //}
+
+                ObjectPool.Instance.ReturnSpawnsToPool();
             }
 
 //			SceneManager.LoadScene("1 Character creation");
@@ -1050,15 +1077,25 @@ namespace EQBrowser
 //			byte decay = ReadInt8(data, ref position); // 0 = vanish immediately, 1 = 'Decay' sparklies for corpses.
 //			GameObject temp = ObjectPool.instance.spawnlist.Where(obj => obj.name == spawn_id.ToString()).SingleOrDefault();
 			if(spawn_id == OurTargetID){DoTarget("0");}
-			GameObject temp = null;
-			if(isDead == false){temp = ObjectPool.instance.spawnlist.FirstOrDefault(obj => obj.name == spawn_id.ToString());}
-			if(temp != null)
+			
+            //GameObject temp = null;
+            NPCController npcController = null;
+            bool present = false;
+			
+            if(isDead == false)
+            {
+                //temp = ObjectPool.Instance.spawnlist.FirstOrDefault(obj => obj.name == spawn_id.ToString());
+                present = ObjectPool.Instance.GetSpawn(spawn_id, out npcController);
+            }
+
+            if (present)
 			{
-					string PrefabName = temp.GetComponent<NPCController>().prefabName;			
-					temp.name = PrefabName;
+					string PrefabName = npcController.prefabName;
+                    npcController.name = PrefabName;
 					Debug.Log("DELETESPAWN: " + spawn_id);
-					ObjectPool.instance.PoolObject(temp);
-					ObjectPool.instance.spawnlist.Remove(temp);
+					//ObjectPool.Instance.PoolObject(temp);
+					//ObjectPool.Instance.spawnlist.Remove(temp);
+                    ObjectPool.Instance.ReturnSpawnToPool(npcController);
 			}
     
 		}
@@ -1106,17 +1143,20 @@ namespace EQBrowser
 			float rotation = BitConverter.ToSingle(BitConverter.GetBytes(ReadInt32(data, ref position)), 0);
 			
 			
-			GameObject temp = null;
+			//GameObject temp = null;
+            NPCController npcController = null;
+            bool present = false;
+
 			if(isDead == false)
             {
-                temp = ObjectPool.instance.spawnlist.FirstOrDefault(obj => obj.name == spawn_id.ToString());
+                //temp = ObjectPool.Instance.spawnlist.FirstOrDefault(obj => obj.name == spawn_id.ToString());
+                present = ObjectPool.Instance.GetSpawn(spawn_id, out npcController);
             }
 
 //			GameObject temp = ObjectPool.instance.spawndict[spawn_id];
-			if(temp != null)
+			if(present)
 			{
-                NPCController controller = temp.GetComponent<NPCController>();
-                controller.SetXYZRotDeltaXYZR(-x, z, y, rotation, animationspeed, -deltaX, deltaZ, deltaY, deltaH);
+                npcController.SetXYZRotDeltaXYZR(-x, z, y, rotation, animationspeed, -deltaX, deltaZ, deltaY, deltaH);
 
                 ////controller.movetoX = -x;// Player's Name
                 ////controller.movetoY = z;// Player's Name
@@ -1145,7 +1185,6 @@ namespace EQBrowser
                 ////controller.deltaH = deltaH;// Player's Name
                 //controller.SetDeltaHeading(deltaH);
                 //controller.clientUpdate = true;
-
                 
 			}
 			
@@ -1161,11 +1200,19 @@ namespace EQBrowser
 			Debug.Log("StateAdd: Spawnid: " + spawnId + " state: " + state);
 
 //			GameObject temp = ObjectPool.instance.spawnlist.Where(obj => obj.name == spawnId.ToString()).SingleOrDefault();
-			GameObject temp = ObjectPool.instance.spawnlist.FirstOrDefault(obj => obj.name == spawnId.ToString()); 
-			if(temp != null)
-			{
-				temp.GetComponent<NPCController>().animationState = state;// Player's Name
-			}
+            //GameObject temp = ObjectPool.Instance.spawnlist.FirstOrDefault(obj => obj.name == spawnId.ToString()); 
+            //if(temp != null)
+            //{
+            //    temp.GetComponent<NPCController>().animationState = state;// Player's Name
+            //}
+
+            NPCController npcController = null;
+            bool present = ObjectPool.Instance.GetSpawn(spawnId, out npcController);
+
+            if (present)
+            {
+                npcController.animationspeed = state;
+            }
 			
 		}
 		public void HandleWorldMessage_PlayerStateRemove(byte[] data, int datasize, bool fromWorld)
@@ -1941,14 +1988,14 @@ namespace EQBrowser
                 switch (race)
                 {
                     case Race.Human:
-                        if (NPC == 0)
-                        {
-                            ObjectPool.instance.GetObjectForType(true, -x, z, y, spawnId, race, name, heading, deity, size, NPC, curHp, max_hp, level, gender);
-                        }
-                        else
-                        {
-                            ObjectPool.instance.GetObjectForType(true, -x, z, y, spawnId, race, name, heading, deity, size, NPC, curHp, max_hp, level, gender);
-                        }
+                        //if (NPC == 0)
+                        //{
+                        //    ObjectPool.instance.GetObjectForType(true, -x, z, y, spawnId, race, name, heading, deity, size, NPC, curHp, max_hp, level, gender);
+                        //}
+                        //else
+                        //{
+                        //    ObjectPool.instance.GetObjectForType(true, -x, z, y, spawnId, race, name, heading, deity, size, NPC, curHp, max_hp, level, gender);
+                        //}
                         break;
 
                     case Race.Beetle:

@@ -269,6 +269,7 @@ public class ObjectPool : MonoBehaviour
         //at runtime outside of the instantiation periods.
         //http://stackoverflow.com/questions/13211277/performance-differences-so-dramatic
         //Could still be looked at for performance though specifically to the game, claims of actual testing here
+        //If performance becomes a giant issue, might want to store by gender-as-int instead of enum since there's some GC involved
         protected Dictionary<EQBrowser.Gender, List<GameObject>> _storage;
 
         public GenderedStorage()
@@ -283,15 +284,18 @@ public class ObjectPool : MonoBehaviour
         /// <param name="newGO"></param>
         public void AddStorage(EQBrowser.Gender gender, GameObject newGO)
         {
-            if(_storage.ContainsKey(gender))
+            List<GameObject> GOs = null;
+            bool present = _storage.TryGetValue(gender, out GOs);
+
+            if (present)
             {
-                _storage[gender].Add(newGO);
+                GOs.Add(newGO);
             }
             else
             {
-                List<GameObject> newList = new List<GameObject>();
-                newList.Add(newGO);
-                _storage.Add(gender, newList);
+                GOs = new List<GameObject>();
+                GOs.Add(newGO);
+                _storage.Add(gender, GOs);
             }
         }
 
@@ -324,7 +328,7 @@ public class ObjectPool : MonoBehaviour
                 //Remove from the rear in the list otherwise we'll have to update the whole list internally
                 int count = GOs.Count;
                 GO = GOs[count - 1];
-                GOs.RemoveAt(count);
+                GOs.RemoveAt(count - 1);
 
                 return true;
             }
@@ -356,10 +360,13 @@ public class ObjectPool : MonoBehaviour
 
     protected Dictionary<int, NPCController> _spawnList;
 
+    //TODO - if performance becomes a big issue, may want to use race-as-int instead of enum - CasualSimpleton
     protected Dictionary<EQBrowser.Race, GenderedStorage> _pool;
 
     void Awake()
     {
+        Instance = this;
+
         _startTimer = new System.Diagnostics.Stopwatch();
         //_startTimer.Start();
 
@@ -394,9 +401,12 @@ public class ObjectPool : MonoBehaviour
 
     void BeginInit()
     {
+        _startTimer.Reset();
+        _startTimer.Start();
         if (ContainerObject == null)
         {
             ContainerObject = new GameObject();
+            ContainerObject.name = "ObjectPoolContainer";
         }
 
         DontDestroyOnLoad(ContainerObject);
@@ -484,7 +494,6 @@ public class ObjectPool : MonoBehaviour
         if (present)
         {
             present = storage.GetGOFromStorage(gender, out GO);
-            prefabName = GO.name;
 
             if (!present)
             {
@@ -497,6 +506,38 @@ public class ObjectPool : MonoBehaviour
                     DontDestroyOnLoad(GO);
                     prefabName = GO.name = PrefabListing.Instance.Prefabs[(int)race].Prefab[(int)gender].name;
                 }
+                else
+                {
+                    bool foundAtleastOne = false;
+                    //We can't find any prefab of that gender, so look at all the genders of that entry and see if any are set
+                    for (int i = 0; i < PrefabListing.Instance.Prefabs[(int)race].Prefab.Length; i++)
+                    {
+                        if (PrefabListing.Instance.Prefabs[(int)race].Prefab[i] != null)
+                        {
+                            try
+                            {
+                            GO = Instantiate(PrefabListing.Instance.Prefabs[(int)race].Prefab[i]) as GameObject;
+                            DontDestroyOnLoad(GO);
+                            prefabName = GO.name = PrefabListing.Instance.Prefabs[(int)race].Prefab[i].name;
+                            foundAtleastOne = true;
+                            }
+                            catch
+                            {
+                                Debug.LogError("PROBLEM");
+                            }
+
+                            break;
+                        }
+                    }
+
+                    //Nothing listed at all, so get a default male
+                    if (!foundAtleastOne)
+                    {
+                        _pool.TryGetValue(EQBrowser.Race.Default, out storage);
+
+                        storage.GetGOFromStorage(EQBrowser.Gender.Male, out GO);
+                    }
+                }
             }
         }
         else
@@ -506,9 +547,10 @@ public class ObjectPool : MonoBehaviour
             _pool.TryGetValue(EQBrowser.Race.Default, out storage);
 
             storage.GetGOFromStorage(EQBrowser.Gender.Male, out GO);
-            prefabName = GO.name;
         }
 
+        prefabName = GO.name;
+        
         SetValues(GO, prefabName, race, gender, x, y, z, deltaX, deltaY, deltaZ, deltaH, spawnID, name, heading, deity, size, npcType, curHP, maxHP, level);
 
         return GO;    

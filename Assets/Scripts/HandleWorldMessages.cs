@@ -1832,7 +1832,7 @@ namespace EQBrowser
 				float heading = BitConverter.ToSingle(BitConverter.GetBytes(ReadInt32(data, ref position)), 0);// heading
 				Int16 deity = ReadInt16(data, ref position);// Player's Deity
 				float size = BitConverter.ToSingle(BitConverter.GetBytes(ReadInt32(data, ref position)), 0);// Model size
-				byte NPC = ReadInt8(data, ref position);// 0=player,1=npc,2=pc corpse,3=npc corpse,a
+                NPCController.NPCType NPC = (NPCController.NPCType)ReadInt8(data, ref position);// 0=player,1=npc,2=pc corpse,3=npc corpse,a
 				byte haircolor = ReadInt8(data, ref position);// Hair color
 				byte curHp = ReadInt8(data, ref position);// Current hp %%% wrong
 				byte max_hp = ReadInt8(data, ref position);// (name prolly wrong)takes on the value 100 for players, 100 or 110 for NPCs and 120 for PC corpses...
@@ -1889,7 +1889,7 @@ namespace EQBrowser
 				byte class_ = ReadInt8(data, ref position);// Player's class
 				byte eyecolor2 = ReadInt8(data, ref position);// Left eye color
 				byte flymode = ReadInt8(data, ref position);// Fly
-				byte gender = ReadInt8(data, ref position);// Gender (0=male, 1=female)
+                EQBrowser.Gender gender = (EQBrowser.Gender)ReadInt8(data, ref position);// Gender (0=male, 1=female)
 				byte bodytype = ReadInt8(data, ref position);// Bodytype
 				byte Equipchest2 = ReadInt8(data, ref position);// Second place in packet for chest texture (usually 0xFF in live packets)// Not sure why there are 2 of them, but it effects chest texture!// drogmor: 0=white, 1=black, 2=green, 3=red// horse: 0=brown, 1=white, 2=black, 3=tan
 
@@ -1988,38 +1988,39 @@ namespace EQBrowser
                 switch (race)
                 {
                     case Race.Human:
-                        //if (NPC == 0)
-                        //{
-                        //    ObjectPool.instance.GetObjectForType(true, -x, z, y, spawnId, race, name, heading, deity, size, NPC, curHp, max_hp, level, gender);
-                        //}
-                        //else
-                        //{
-                        //    ObjectPool.instance.GetObjectForType(true, -x, z, y, spawnId, race, name, heading, deity, size, NPC, curHp, max_hp, level, gender);
-                        //}
+                        if (NPC == NPCController.NPCType.Player)
+                        {
+                            //ObjectPool.Instance.GetObjectForType(true, -x, z, y, spawnId, race, name, heading, deity, size, NPC, curHp, max_hp, level, gender);
+                            ObjectPool.Instance.GetObjectByRaceAndGender(race, gender,
+                                -x, y, z, deltaX, deltaY, deltaZ, deltaHeading,
+                                spawnId, name, heading, deity, size, NPC, curHp, max_hp, level);
+                        }
+                        else
+                        {
+                            //ObjectPool.Instance.GetObjectForType(true, -x, z, y, spawnId, race, name, heading, deity, size, NPC, curHp, max_hp, level, gender);
+                            ObjectPool.Instance.GetObjectByRaceAndGender(Race.Gnoll, gender,
+                                -x, y, z, deltaX, deltaY, deltaZ, deltaHeading,
+                                spawnId, name, heading, deity, size, NPC, curHp, max_hp, level);
+                        }
                         break;
 
                     case Race.Beetle:
-                        break;
-
                     case Race.GiantBat:
-                        break;
-
                     case Race.GiantRat:
-                        break;
-
                     case Race.GiantSnake:
-                        break;
-
                     case Race.GiantSpider:
-                        break;
-
                     case Race.Gnoll:
-                        break;
-
                     case Race.Skeleton:
+                        ObjectPool.Instance.GetObjectByRaceAndGender(race, gender,
+                                -x, y, z, deltaX, deltaY, deltaZ, deltaHeading,
+                                spawnId, name, heading, deity, size, NPC, curHp, max_hp, level);
                         break;
 
                     default:
+                        Debug.LogWarningFormat("Unhandled race {0} spawn type, spawnID: {1} name: {2} pos: {3},{4},{5}. Using default.", race, spawnId, name, -x, y, z);
+                        ObjectPool.Instance.GetObjectByRaceAndGender(Race.Default, Gender.Male,
+                                -x, y, z, deltaX, deltaY, deltaZ, deltaHeading,
+                                spawnId, name, heading, deity, size, NPC, curHp, max_hp, level);
                         break;
                 }
 			}

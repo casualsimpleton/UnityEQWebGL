@@ -31,6 +31,9 @@ namespace EQBrowser {
 		public GameObject NullGameObject;
 		public int isAttacking;
 
+        public static Camera MainCamera;
+        public static Transform MainCameraTransform;
+
         //No ping yet, but we can keep track of packets per second to see if connection is moving.
         public static int PacketsLatestSecond;
         public static long PacketsUnhandledType;
@@ -397,6 +400,11 @@ namespace EQBrowser {
 		// Update is called once per frame
 		void Update ()
 		{
+            MainCamera = Camera.main;
+            if (MainCamera != null)
+            {
+                MainCameraTransform = MainCamera.transform;
+            }
 
 			//Establish a world connection.
 			if (ws_ != null) {

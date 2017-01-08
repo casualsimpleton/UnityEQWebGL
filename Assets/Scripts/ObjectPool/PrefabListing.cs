@@ -10,8 +10,6 @@ using EQBrowser;
 
 public class PrefabListing : MonoBehaviour
 {
-    public static PrefabListing Instance { get; private set; }
-
     [Serializable]
     public class PrefabListEntry
     {
@@ -36,4 +34,13 @@ public class PrefabListing : MonoBehaviour
     }
 
     public PrefabListEntry[] Prefabs;
+
+    public static PrefabListing Instance { get; private set; }
+
+    void Awake()
+    {
+        Instance = this;
+
+        DontDestroyOnLoad(transform.gameObject);
+    }
 }

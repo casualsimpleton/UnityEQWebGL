@@ -1,4 +1,5 @@
-﻿using UnityEngine;	
+﻿using UnityEngine;
+using UnityEngine.Profiling;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -121,20 +122,31 @@ public class NPCController : MonoBehaviour
 	void Update () 
 	{
 		//gravity
-		
+
+        Profiler.BeginSample("NPC NamePlates");
+        
 		if(string.IsNullOrEmpty(targetName))
 		{
             UpdateNamePlate();
 		}
 
 		//if player respawned, reset NPC name Vars in Start
-		if(playerRespawn == true){Start();playerRespawn = false;}
+		if(playerRespawn == true)
+        {
+            Start();
+            playerRespawn = false;
+        }
 		//overhead names face player
 		
-        if(Camera.main.velocity != new Vector3(0,0,0) || this.controller.velocity != new Vector3(0,0,0) || updateHeading == true)
-		{
-			NameObject.transform.LookAt(2 * NameObject.transform.position - Camera.main.transform.position);
-		}
+        //if(Camera.main.velocity != new Vector3(0,0,0) || this.controller.velocity != new Vector3(0,0,0) || updateHeading == true)
+        //{
+        //    NameObject.transform.LookAt(2 * NameObject.transform.position - Camera.main.transform.position);
+        //}
+        if (WorldConnect.MainCamera.velocity != new Vector3(0, 0, 0) || this.controller.velocity != new Vector3(0, 0, 0) || updateHeading == true)
+        {
+            NameObject.transform.LookAt(2 * NameObject.transform.position - WorldConnect.MainCameraTransform.position);
+        }
+
 		//green name when targetted
 		if(isTarget == true && colorActivate == false)
 		{
@@ -147,6 +159,10 @@ public class NPCController : MonoBehaviour
 			rend.material.color = Color.red;
 			colorActivate = false;
 		}
+
+        Profiler.EndSample();
+        Profiler.BeginSample("NPC Heading");
+
 		//update heading from clientupdate packet
 		if(updateHeading == true)
 		{
@@ -161,6 +177,8 @@ public class NPCController : MonoBehaviour
 			deltaF = new Vector3 (deltaX,deltaY,deltaZ);
 			updateDeltas = false;
 		}
+
+        Profiler.EndSample();
 		
 		// TODO-performance: Only do this when the NPC hp changes (specifically it decreases)
 		if(NPC == NPCType.PC_Corpse || _anim_isDead == 1)
@@ -284,6 +302,7 @@ public class NPCController : MonoBehaviour
 
 //            }
 
+            Profiler.BeginSample("NPC Movement");
             //Calculate delta magnitude just once since we may use it in multiple areas
             float deltaMag = deltaF.magnitude;
 
@@ -304,7 +323,12 @@ public class NPCController : MonoBehaviour
                     //NPC is not where we want them to be, so keep moving them forward - we're only here because we already checked deltas were not 0, otherwise we want to teleport them probably
                     if (_transform.position.x != movetoX || _transform.position.z != movetoZ)
                     {
-                        controller.Move(deltaF * step);
+                        //controller.Move(deltaF * step);
+                        bool isGrounded = controller.SimpleMove(deltaF * step * 20f);
+                        //if (!isGrounded)
+                        //{
+                        //    Debug.LogFormat("{0} isn't grounded", spawnId);
+                        //}
                     }
 
                 }
@@ -321,8 +345,9 @@ public class NPCController : MonoBehaviour
                     AnimIdleNow();
                 }
             }
+            Profiler.EndSample();
 
-            CheckYHeight(updateDeltas);
+            //CheckYHeight(updateDeltas);
 
             Debug.DrawLine(_transform.position, new Vector3(movetoX, movetoY, movetoZ), Color.green);
 
@@ -372,7 +397,7 @@ public class NPCController : MonoBehaviour
         //Use non alloc raycast to reduce GC impact.
         //We're going to offset the ray origin up a bit since there is a small chance we could have clipped through the ground a smidge
         //TOOD - Consider using half the physical size so the ray comes from the mid point (waist-ish) area
-        int hitCount = Physics.RaycastNonAlloc(_transform.position, Vector3.down, _yRayHits, 200f, TerrainMask);
+        int hitCount = Physics.RaycastNonAlloc(_transform.position, Vector3.down, _yRayHits, size * 0.5f, TerrainMask);
 
         if (hitCount > 0)
         {
@@ -380,18 +405,21 @@ public class NPCController : MonoBehaviour
             {
                 //Don't need to check the tag, since we're assuming the walk-able terrain is on the correct layer
                 //Bump them down a smidge
-                if (_yRayHits[i].distance > 3.1f)
-                {
-                    //_transform.position -= new Vector3(0f,20f * Time.deltaTime,0f);
-                    _transform.position -= new Vector3(0, _yRayHits[i].distance, 0f);
-                }
+                //if (_yRayHits[i].distance > 3.1f)
+                //{
+                //    //_transform.position -= new Vector3(0f,20f * Time.deltaTime,0f);
+                //    _transform.position -= new Vector3(0, _yRayHits[i].distance, 0f);
+                //}
 
-                //Bump them up a bit... why 3?
-                if (_yRayHits[i].distance < 3)
-                {
-                    //_transform.position += new Vector3(0f,20f * Time.deltaTime,0f);
-                    _transform.position += new Vector3(0, _yRayHits[i].distance, 0f);
-                }
+                ////Bump them up a bit... why 3?
+                //if (_yRayHits[i].distance < 3)
+                //{
+                //    //_transform.position += new Vector3(0f,20f * Time.deltaTime,0f);
+                //    _transform.position += new Vector3(0, _yRayHits[i].distance, 0f);
+                //}
+
+                _transform.position = _yRayHits[i].point;
+
             }
         }
         else
@@ -547,6 +575,7 @@ public class NPCController : MonoBehaviour
 #endif
 
         _transform.position = new Vector3(movetoX, movetoY, movetoZ);
+        CheckYHeight(true);
 
         movetoX = newX;
         movetoY = newY;
@@ -574,7 +603,7 @@ public class NPCController : MonoBehaviour
         clientUpdate = true;
 
         _rayFrameCount = 0;
-        CheckYHeight(true);
+        //CheckYHeight(true);
     }
 
 #if UNITY_EDITOR

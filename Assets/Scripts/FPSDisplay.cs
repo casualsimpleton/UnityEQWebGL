@@ -5,13 +5,34 @@ using EQBrowser;
 
 public class FPSDisplay : MonoBehaviour
 {
-	float deltaTime = 0.0f;
+    int CurFPS = 0;
 	float msec = 0.0f;
     float packetTimer = 0f;
 
+    void Start()
+    {
+        StartCoroutine(FPSCoRoutine(0.5f));
+    }
+
+    private IEnumerator FPSCoRoutine(float frequency)
+    {
+        for (; ; )
+        {
+            // Capture frame-per-second
+            int lastFrameCount = Time.frameCount;
+            float lastTime = Time.realtimeSinceStartup;
+            yield return new WaitForSeconds(frequency);
+            float timeSpan = Time.realtimeSinceStartup - lastTime;
+            int frameCount = Time.frameCount - lastFrameCount;
+
+            // Display it
+            CurFPS = Mathf.RoundToInt(frameCount / timeSpan);
+        }
+    }
+
 	void Update()
 	{
-		deltaTime += (Time.deltaTime - deltaTime) * 0.1f;
+		//deltaTime += (Time.deltaTime - deltaTime) * 0.1f;
 
         packetTimer += Time.deltaTime;
 
@@ -33,8 +54,7 @@ public class FPSDisplay : MonoBehaviour
 		style.alignment = TextAnchor.UpperLeft;
 		style.fontSize = h * 2 / 100;
 		style.normal.textColor = new Color (1.0f, 0.92f, 0.016f, 1.0f);
-		float fps = 1.0f / deltaTime;
-        string text = string.Format("{0:0} ms ({1:0.} fps)\np/s: {2} tot. p: {3}\nunhand. p: {4}", WorldConnect.PingTime, fps, WorldConnect.PacketsLatestSecond, WorldConnect.PacketsTotal, WorldConnect.PacketsUnhandledType);
+        string text = string.Format("{0:0} ms ({1:0.} fps)\np/s: {2} tot. p: {3}\nunhand. p: {4}", WorldConnect.PingTime, CurFPS, WorldConnect.PacketsLatestSecond, WorldConnect.PacketsTotal, WorldConnect.PacketsUnhandledType);
 		GUI.Label(rect, text, style);
 	}
 }
